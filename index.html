@@ -98,13 +98,13 @@
   .rec .ft { display: flex; justify-content: space-between; align-items: center; min-height: 1.6rem; padding: 3px 10px;
              font-size: .78rem; font-weight: 800; background: color-mix(in oklab, var(--color-primary-content) 16%, transparent); }
   .rec .ft .st0 { opacity: .55; font-size: .95rem; line-height: 1; }
-  .rec .ft .dots { display: flex; gap: 4px; margin: 0 auto; }
-  .rec .ft .dots i { width: 9px; height: 9px; border-radius: 50%; }
+  .rec .ft .dots { display: flex; gap: 3px; margin: 0 auto; }
+  .rec .ft .dots i { width: 7px; height: 7px; border-radius: 50%; }
   .rec.big .nm { padding-top: 18px; }
   .rec.big .ft { font-size: 1rem; padding: 5px 14px; }
-  /* the lesson's seven dots: the case being shown is bigger */
-  #seeDots i { width: 12px; height: 12px; border-radius: 50%; opacity: .4; transition: transform .2s, opacity .2s; }
-  #seeDots i.cur { opacity: 1; transform: scale(1.5); }
+  /* the sea sentence (home, table, drills — not the exam): each word's first letter in its gnome's colour */
+  .sent { font-weight: 700; line-height: 1.45; }
+  .sent b { font-weight: 900; font-size: 1.3em; }
 
   /* ---------- „dojo" (Ninja 10's kid theme): the starry sky behind every screen and the chunky pastel buttons, one hue
      per button (--h, set on the button). The theme's colours are in theme-milioni.css. Only this theme. ---------- */
@@ -137,77 +137,59 @@
 <body class="h-full m-0 bg-base-100 text-base-content">
   <main id="app" class="h-full max-w-3xl mx-auto">
 
-    <!-- home = topic 1's menu (the only topic so far): the seven gnomes (a tap opens the lesson at that one),
-         the lesson, three drills and the exam, each drill with its record -->
-    <section id="home" class="h-full flex-col p-5 gap-4">
+    <!-- home = topic 1's menu (the only topic so far). Everything is open from the start (Lasha picked „B"):
+         ① Wszystkie razem — the table, Kolejność, Pytania i nazwy · ② Po kolei — the seven chapters · ③ the exam -->
+    <section id="home" class="h-full flex-col p-5 pt-3 gap-3 overflow-y-auto">
       <div class="flex justify-end">
         <button id="toSet" class="btn btn-ghost btn-circle text-2xl">⚙️</button>
       </div>
-      <div class="flex flex-col items-center gap-2">
+      <div class="flex flex-col items-center gap-2 -mt-6">
         <div id="homeG" class="flex justify-center gap-1"></div>
-        <h1 class="text-4xl font-bold text-primary mt-2" data-t="title"></h1>
-        <p class="text-lg opacity-70" data-t="home_sub"></p>
+        <h1 class="text-4xl font-bold text-primary mt-1" data-t="title"></h1>
+        <p class="text-lg opacity-70 -mt-1" data-t="home_sub"></p>
+        <p id="homeS" class="sent flex flex-wrap justify-center gap-x-2 text-xl text-center"></p>
       </div>
-      <div class="grid grid-cols-2 gap-3 mt-4">
-        <button id="goSee" class="btn btn-primary rec h-auto min-h-20" style="--h:345">
-          <span class="nm text-xl" data-t="home_lesson"></span><span class="ft"><span id="ftSee" class="dots"></span></span></button>
-        <button class="btn btn-primary rec h-auto min-h-20" data-m="pyt" style="--h:155">
-          <span class="nm text-xl" data-t="m_pyt"></span><span class="ft" id="ft_pyt"></span></button>
-        <button class="btn btn-primary rec h-auto min-h-20" data-m="naz" style="--h:250">
-          <span class="nm text-xl" data-t="m_naz"></span><span class="ft" id="ft_naz"></span></button>
-        <button class="btn btn-primary rec h-auto min-h-20" data-m="kol" style="--h:65">
-          <span class="nm text-xl" data-t="m_kol"></span><span class="ft" id="ft_kol"></span></button>
-        <button class="btn btn-primary rec big h-auto min-h-24 col-span-2" data-m="egz" style="--h:85">
-          <span class="nm text-2xl" data-t="m_egz"></span><span class="ft" id="ft_egz"></span></button>
+      <p class="font-extrabold opacity-80 -mb-1 mt-1">① <span data-t="home_all"></span></p>
+      <div class="grid grid-cols-3 gap-2">
+        <button id="goTab" class="btn btn-primary rec h-auto min-h-16" style="--h:155">
+          <span class="nm text-lg leading-tight" data-t="m_tab"></span><span class="ft"><span id="ftTab" class="dots"></span></span></button>
+        <button class="btn btn-primary rec h-auto min-h-16" data-m="kol" style="--h:250">
+          <span class="nm text-lg leading-tight" data-t="m_kol"></span><span class="ft" id="ft_kol"></span></button>
+        <button class="btn btn-primary rec h-auto min-h-16" data-m="pn" style="--h:65">
+          <span class="nm text-lg leading-tight" data-t="m_pn"></span><span class="ft" id="ft_pn"></span></button>
       </div>
+      <p class="font-extrabold opacity-80 -mb-1 mt-1">② <span data-t="home_one"></span></p>
+      <div id="homeCh" class="grid grid-cols-2 gap-2"></div>
+      <button class="btn btn-primary rec big h-auto min-h-20 shrink-0 mt-1" data-m="egz" style="--h:85">
+        <span class="nm text-2xl">③&nbsp;<span data-t="m_egz"></span></span><span class="ft" id="ft_egz"></span></button>
     </section>
 
-    <!-- lesson, „see": one gnome per screen — number + name, its question, its helper word, an example -->
-    <section id="see" class="h-full flex-col p-5 gap-4">
+    <!-- the table, as the textbook's p. 73 „PRZYPADKI RZECZOWNIKA": the seven gnomes top to bottom, each with
+         number + name, its questions, its helper words and the examples -->
+    <section id="tab" class="h-full flex-col p-5 gap-3">
       <div class="flex items-center gap-2">
         <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
-        <h2 class="text-2xl font-bold" data-t="home_lesson"></h2>
-        <span id="seeOf" class="ml-auto text-sm opacity-60"></span>
+        <h2 class="text-2xl font-bold" data-t="home_sub"></h2>
       </div>
-      <div id="seeDots" class="flex justify-center gap-3 mt-2"></div>
-      <div class="flex-1 flex flex-col items-center justify-center gap-1 text-center">
-        <div id="seeG" class="mb-3"></div>
-        <p id="seeN" class="text-4xl font-black"></p>
-        <p id="seeQ" class="text-4xl font-bold mt-3"></p>
-        <p id="seeH" class="text-xl opacity-70"></p>
-        <p id="seeE" class="text-lg opacity-60 mt-3"></p>
-      </div>
-      <div class="flex gap-3">
-        <button id="seePrev" class="btn btn-outline btn-primary btn-lg px-6">←</button>
-        <button id="seeNext" class="btn btn-primary btn-lg flex-1" data-t="btn_next"></button>
-      </div>
+      <div id="tabS" class="sent flex flex-wrap justify-center gap-x-2 text-lg text-center"></div>
+      <div id="tabL" class="flex-1 overflow-y-auto flex flex-col gap-2"></div>
+      <button class="btn btn-primary btn-lg btn-block shrink-0 quit" data-t="btn_back"></button>
     </section>
 
-    <!-- lesson, „say": the order as one funny sentence, each word's first letter in its gnome's colour -->
-    <section id="say" class="h-full flex-col p-5 gap-4 text-center">
-      <div class="flex items-center gap-2">
-        <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
-        <h2 class="text-2xl font-bold" data-t="home_lesson"></h2>
-      </div>
-      <div class="flex-1 flex flex-col items-center justify-center gap-8">
-        <p class="text-2xl font-bold" data-t="say_title"></p>
-        <div id="sayS" class="flex flex-wrap justify-center gap-x-3 gap-y-5"></div>
-        <p class="text-lg opacity-70" data-t="say_tip"></p>
-      </div>
-      <button id="sayOk" class="btn btn-primary btn-lg btn-block" data-t="btn_said"></button>
-    </section>
-
-    <!-- drill: 10 cards (the exam 15), a 5-second bar, seven answer buttons in the cases' order -->
-    <section id="drill" class="h-full flex-col p-5 gap-4 relative overflow-hidden">
+    <!-- drill: 10 cards (the exam 15; Kolejność 7 steps), a 5-second bar, seven answer buttons. The sea sentence on top,
+         except in the exam. Kolejność: the seven names mixed up, tapped from 1 to 7 into the slots (#dO) -->
+    <section id="drill" class="h-full flex-col p-5 gap-3 relative overflow-hidden">
       <div class="flex justify-between items-center">
         <button id="dPause" class="btn btn-ghost btn-sm text-xl">✕</button>
         <span id="dCount" class="text-sm opacity-60"></span>
         <span id="dScore" class="text-lg font-bold text-warning"></span>
       </div>
-      <div class="h-2 rounded-full bg-base-300 overflow-hidden"><div id="bar" class="h-full bg-primary"></div></div>
+      <div id="dS" class="sent flex flex-wrap justify-center gap-x-2 text-lg text-center"></div>
+      <div class="h-2 shrink-0 rounded-full bg-base-300 overflow-hidden"><div id="bar" class="h-full bg-primary"></div></div>
       <div class="flex-1 flex flex-col items-center justify-center gap-3 text-center">
         <p id="dPr" class="text-lg opacity-70"></p>
         <div id="dQ" class="text-4xl font-bold leading-tight"></div>
+        <div id="dO" class="w-full max-w-xs flex-col gap-1.5" style="display:none"></div>
         <!-- a fixed height: the feedback line must not move the card -->
         <div id="dFb" class="text-2xl h-8 leading-8"></div>
       </div>
@@ -312,21 +294,20 @@
     pl: {
       title: "Krasnoludki",
       home_sub: "Przypadki rzeczownika",
-      home_lesson: "Lekcja",
-      m_pyt: "Pytania",
-      m_naz: "Nazwy",
+      home_all: "Wszystkie razem",
+      home_one: "Po kolei",
+      m_tab: "Tabela",
       m_kol: "Kolejność",
+      m_pn: "Pytania i nazwy",
       m_egz: "Egzamin",
       q_pyt: "Na jakie pytania odpowiada?",
       q_naz: "Który to przypadek?",
-      q_kol: "Który to numer?",
-      see_of: function (n) { return n + " z 7"; },
+      q_num: "Który to numer?",
+      q_ord: "Ułóż od 1 do 7!",
       see_ex: "np.",
-      say_title: "Zapamiętaj kolejność!",
-      say_tip: "Powiedz to zdanie na głos trzy razy.",
-      // the textbook's sentence: one word per case, its first letter = the case's first letter
-      say_words: ["Mama", "drozda", "celowo", "była", "na", "miejscu", "wypadku."],
-      btn_said: "Gotowe!",
+      // the textbook's sea sentence (p. 74): one word per case, its first letter = the case's first letter.
+      // Shown on home, the table and every drill except the exam
+      say_words: ["Mam", "domek", "cały", "biały", "nad", "morzem", "wspaniałym."],
       btn_next: "Dalej",
       fb_fast: "⚡ Szybko!",
       fb_ok: "Dobrze!",
@@ -352,16 +333,17 @@
       exit_ask: "Zamknąć aplikację?",
       exit_yes: "Tak, zamknij",
       exit_no: "Nie",
-      // the seven cases in the textbook's order (p. 73): name, questions, helper word, example (babcia, singular).
-      // ab = the short name from p. 84 · h = the gnome's hat hue (oklch), red → pink like a rainbow
+      // the seven cases exactly as the textbook's table (p. 73): name, questions, helper words, examples
+      // (babcia singular, koszyki plural). ab = the short name from p. 84 · h = the gnome's hat hue (oklch), red → pink
       cases: [
-        { ab: "M.",  name: "Mianownik",   q: "Kto? Co?",       help: "(jest)",           ex: "babcia",     h: 25 },
-        { ab: "D.",  name: "Dopełniacz",  q: "Kogo? Czego?",   help: "(nie ma)",         ex: "babci",      h: 60 },
-        { ab: "C.",  name: "Celownik",    q: "Komu? Czemu?",   help: "(się przyglądam)", ex: "babci",      h: 95 },
-        { ab: "B.",  name: "Biernik",     q: "Kogo? Co?",      help: "(widzę)",          ex: "babcię",     h: 150 },
-        { ab: "N.",  name: "Narzędnik",   q: "Z kim? Z czym?", help: "(idę)",            ex: "(z) babcią", h: 250 },
-        { ab: "Ms.", name: "Miejscownik", q: "O kim? O czym?", help: "(mówię)",          ex: "(o) babci",  h: 300 },
-        { ab: "W.",  name: "Wołacz",      q: "O!",             help: "(mój drogi!)",     ex: "babciu!",    h: 345 }
+        { ab: "M.",  name: "Mianownik",   q: "Kto? Co?",       help: "(jest, są)",        ex: "babcia, koszyki",            h: 25 },
+        { ab: "D.",  name: "Dopełniacz",  q: "Kogo? Czego?",   help: "(nie ma)",          ex: "babci, koszyków",            h: 60 },
+        { ab: "C.",  name: "Celownik",    q: "Komu? Czemu?",   help: "(się przyglądam)",  ex: "babci, koszykom",            h: 95 },
+        { ab: "B.",  name: "Biernik",     q: "Kogo? Co?",      help: "(widzę)",           ex: "babcię, koszyki",            h: 150 },
+        { ab: "N.",  name: "Narzędnik",   q: "Z kim? Z czym?", help: "(idę)",             ex: "(z) babcią, (z) koszykami",  h: 250 },
+        { ab: "Ms.", name: "Miejscownik", q: "O kim? O czym?", help: "(mówię)",           ex: "(o) babci, (o) koszykach",   h: 300 },
+        { ab: "W.",  name: "Wołacz",      q: "O!",
+          help: "(mój drogi, moja droga, moi drodzy, moje drogie)",                       ex: "babciu, koszyki",            h: 345 }
       ]
     }
   };
@@ -369,12 +351,13 @@
 
   /* ---------- settings ---------- */
   var FAST_MS = 5000;            // an answer counts as "known by heart" only under this (reading takes longer than a sum)
-  // a round's size and its „memorized" line: 8 of 10 fast and right (as Ninja 10); the exam 12 of 15 (the same 80 %)
-  var MODES = { pyt: { n: 10, m: 8 }, naz: { n: 10, m: 8 }, kol: { n: 10, m: 8 }, egz: { n: 15, m: 12 } };
+  // a round's size and its „memorized" line: 8 of 10 fast and right (as Ninja 10); the exam 12 of 15 (the same 80 %);
+  // Kolejność = the seven in order, every step right the first time and fast
+  var MODES = { kol: { n: 7, m: 7 }, pn: { n: 10, m: 8 }, egz: { n: 15, m: 12 } };
   // Points for a right answer: 100 at once, down to 20 at FAST_MS, never below 20. Wrong = 0.
   var PTS_MAX = 100, PTS_MIN = 20;
   function points(ms) { return Math.max(PTS_MIN, Math.round(PTS_MAX - (PTS_MAX - PTS_MIN) * ms / FAST_MS)); }
-  var SAVE_KEY = "krasnoludki_v1";   // a change to the saved shape needs a migration in load() · gitleaks:allow (a storage key, no secret)
+  var SAVE_KEY = "krasnoludki_v2";   // a change to the saved shape needs a migration in load() · gitleaks:allow (a storage key, no secret)
 
   /* ---------- state + save ---------- */
   // Ninja 10's 6 themes, dojo first — same list as sim.html
@@ -548,6 +531,15 @@
   function dotsHtml() {
     return CASES.map(function (c) { return '<i style="background:' + hatCol(c.h) + '"></i>'; }).join("");
   }
+  // the sea sentence, word i = case i, its first letter in the gnome's colour. cur = the word to light (the lesson's
+  // gnome, painted whole in its colour); -1 = none (home)
+  function sentHtml(cur) {
+    return t("say_words").map(function (w, i) {
+      var col = textCol(CASES[i].h);
+      return "<span" + (i === cur ? ' class="cur" style="color:' + col + '"' : "") + '><b style="color:' + col + '">' +
+             w.charAt(0) + "</b>" + w.slice(1) + "</span>";
+    }).join("");
+  }
 
   /* ---------- screens ---------- */
   var current = null;
@@ -560,14 +552,12 @@
   function goHome() { round++; barStop(); renderBest(); show("home"); }
 
   /* ---------- the phone's back button (as Ninja 10) ----------
-     Back = one screen back: an open dialog closes · the lesson steps back gnome by gnome, its first → home ·
-     a drill → the pause window · every other screen → home · home → „close the app?" */
+     Back = one screen back: an open dialog closes · a drill → the pause window · every other screen → home ·
+     home → „close the app?" */
   function back() {
     if ($("exitAsk").open) $("exitAsk").close();
     else if ($("resetAsk").open) $("resetAsk").close();
     else if ($("pauseAsk").open) $("pauseAsk").close();
-    else if (current === "see" && seeI > 0) { seeI--; seeShow(); }
-    else if (current === "say") { seeI = CASES.length - 1; seeShow(); show("see"); }
     else if (current === "drill") pauseOpen();
     else if (current !== "home") goHome();
     else { $("exitAsk").showModal(); log("back: close the app?"); }
@@ -601,51 +591,43 @@
         (b && b.master ? "<span>⭐</span>" : '<span class="st0">☆</span>');
     });
   }
-  $("homeG").innerHTML = CASES.map(function (c, i) {
-    return '<button class="cursor-pointer" data-i="' + i + '" aria-label="' + c.name + '">' + gnomeSvg(i, 40) + "</button>";
-  }).join("");
-  $("homeG").onclick = function (e) { var b = e.target.closest("button"); if (b) openSee(+b.dataset.i); };
-  $("ftSee").innerHTML = dotsHtml();
-  $("goSee").onclick = function () { openSee(0); };
+  $("homeG").innerHTML = CASES.map(function (c, i) { return gnomeSvg(i, 40); }).join("");
+  $("homeS").innerHTML = sentHtml(-1);
+  $("ftTab").innerHTML = dotsHtml();
+  $("goTab").onclick = function () { $("tabL").scrollTop = 0; show("tab"); log("table"); };
   Array.prototype.forEach.call(document.querySelectorAll("#home [data-m]"), function (b) {
     b.onclick = function () { drillStart(b.dataset.m); };
   });
+  // ② the seven chapters: gnome, number + name, ☆. The chapters themselves are the next step — a tap only logs yet
+  $("homeCh").innerHTML = CASES.map(function (c, i) {
+    return '<button class="btn btn-primary rec h-auto min-h-11" data-ch="' + i + '" style="--h:' + c.h + '">' +
+           '<span class="flex items-center gap-1.5 px-2 py-1 w-full">' + gnomeSvg(i, 22) +
+           '<span class="flex-1 text-left text-sm leading-tight">' + (i + 1) + ". " + c.name + "</span>" +
+           '<span class="text-xs opacity-55">☆</span></span></button>';
+  }).join("");
+  $("homeCh").onclick = function (e) {
+    var b = e.target.closest("button");
+    if (b) log("chapter " + (+b.dataset.ch + 1) + ": not built yet");
+  };
   $("toSet").onclick = function () { show("set"); };
 
-  /* ---------- lesson: see (one gnome per screen) → say (the sentence) → home ---------- */
-  var seeI = 0;
-  $("seeDots").innerHTML = dotsHtml();
-  function openSee(i) { seeI = i; seeShow(); show("see"); log("lesson from " + CASES[i].name); }
-  function seeShow() {
-    var c = CASES[seeI];
-    $("seeOf").textContent = t("see_of", seeI + 1);
-    Array.prototype.forEach.call($("seeDots").children, function (d, j) { d.classList.toggle("cur", j === seeI); });
-    $("seeG").innerHTML = '<div class="gPop">' + gnomeSvg(seeI, 120) + "</div>";
-    $("seeN").textContent = (seeI + 1) + ". " + c.name;
-    $("seeN").style.color = textCol(c.h);
-    $("seeQ").textContent = c.q;
-    $("seeH").textContent = c.help;
-    $("seeE").textContent = t("see_ex") + " " + c.ex;
-    $("seePrev").style.visibility = seeI > 0 ? "" : "hidden";
-  }
-  $("seePrev").onclick = function () { if (seeI > 0) { seeI--; seeShow(); } };
-  $("seeNext").onclick = function () {
-    if (seeI < CASES.length - 1) { seeI++; seeShow(); }
-    else { show("say"); log("lesson: the sentence"); }
-  };
-  $("sayS").innerHTML = t("say_words").map(function (w, i) {
-    var col = textCol(CASES[i].h);
-    return '<span class="flex flex-col items-center"><span class="text-3xl font-bold"><b class="text-4xl font-black" style="color:' +
-           col + '">' + w.charAt(0).toUpperCase() + "</b>" + w.slice(1) + '</span><span class="text-sm font-bold mt-1" style="color:' +
-           col + '">' + CASES[i].ab + "</span></span>";
+  /* ---------- the table (p. 73) ---------- */
+  $("tabS").innerHTML = sentHtml(-1);
+  $("tabL").innerHTML = CASES.map(function (c, i) {
+    return '<div class="flex items-center gap-3 bg-base-200 rounded-box p-3">' + gnomeSvg(i, 52) +
+           '<div class="flex-1 min-w-0"><p class="text-lg font-black leading-tight" style="color:' + textCol(c.h) + '">' +
+           (i + 1) + ". " + c.name + '</p><p class="text-xl font-bold leading-tight mt-1">' + c.q + "</p>" +
+           '<p class="opacity-70 leading-tight">' + c.help + '</p><p class="text-sm opacity-60 mt-1">' + t("see_ex") + " " +
+           c.ex + "</p></div></div>";
   }).join("");
-  $("sayOk").onclick = function () { log("lesson done"); goHome(); };
 
   /* ---------- drill ----------
      A card = { type, i }: „pyt" shows the name → pick the questions · „naz" shows the questions → pick the name ·
-     „kol" shows the name → pick its number. The seven answers always stand in the cases' order. The exam mixes all
-     three (5 of each), gives no help on a wrong answer and never shows the right one. */
+     „num" shows the name → pick its number · „ord" = one step of Kolejność: tap case i among the seven mixed-up names.
+     The answers of pyt / naz / num stand in the cases' order. Pytania i nazwy mixes pyt + naz (5 of each); the exam
+     pyt + naz + num (5 of each), gives no help on a wrong answer and never shows the right one. */
   var mode = null, deck = [], card = null, cardI = 0, nFast = 0, nOk = 0, nPts = 0, cardT0 = 0, locked = true, padType = null;
+  var miss = false;              // Kolejność: this step already had a wrong tap — it counts as wrong, the right one glows
   function shuffle(d) {
     for (var i = d.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = d[i]; d[i] = d[j]; d[j] = x; }
     return d;
@@ -660,8 +642,10 @@
     }
     return out;
   }
-  function dealExam() {
-    var d = dealOne("pyt", 5).concat(dealOne("naz", 5), dealOne("kol", 5));
+  // `each` cards of every type, mixed, never the same case twice in a row
+  function dealMix(types, each) {
+    var d = [];
+    types.forEach(function (ty) { d = d.concat(dealOne(ty, each)); });
     for (var k = 0; k < 50; k++) {
       shuffle(d);
       if (d.every(function (c, j) { return !j || c.i !== d[j - 1].i; })) break;
@@ -669,15 +653,28 @@
     return d;
   }
   function cardText(c) { return c.type === "naz" ? CASES[c.i].q : CASES[c.i].name; }
+  function pickText(type, i) { return type === "pyt" ? CASES[i].q : type === "num" ? String(i + 1) : CASES[i].name; }
+  // the seven answer buttons; for „ord" the names mixed up (never already in order), new for every round
   function padFor(type) {
     if (padType === type) return;
     padType = type;
-    $("pad").classList.toggle("grid-cols-2", type !== "kol");
-    $("pad").classList.toggle("grid-cols-7", type === "kol");
-    $("pad").innerHTML = CASES.map(function (c, i) {
-      var lab = type === "pyt" ? c.q : type === "naz" ? c.name : String(i + 1);
-      return '<button class="btn h-auto min-h-12 py-2 px-1 text-lg font-bold' + (type !== "kol" && i === 6 ? " col-span-2" : "") +
-             (type === "kol" ? " min-h-16 text-2xl" : "") + '" data-i="' + i + '">' + lab + "</button>";
+    var idx = [0, 1, 2, 3, 4, 5, 6];
+    if (type === "ord") while (idx.join() === "0,1,2,3,4,5,6") shuffle(idx);
+    $("pad").classList.toggle("grid-cols-2", type !== "num");
+    $("pad").classList.toggle("grid-cols-7", type === "num");
+    $("pad").innerHTML = idx.map(function (i, k) {
+      return '<button class="btn h-auto min-h-12 py-2 px-1 text-lg font-bold' + (type !== "num" && k === 6 ? " col-span-2" : "") +
+             (type === "num" ? " min-h-16 text-2xl" : "") + '" data-i="' + i + '">' + pickText(type, i) + "</button>";
+    }).join("");
+  }
+  // Kolejność's slots 1–7: the placed ones carry their name in the gnome's colour, the current one is framed
+  function slotsHtml() {
+    return CASES.map(function (c, k) {
+      var done = k < cardI, now = k === cardI;
+      return '<div class="flex items-center gap-2 rounded-field px-3 h-8 border-2 ' +
+             (done ? "border-transparent bg-base-200" : now ? "border-primary" : "border-dashed border-base-300") + '">' +
+             '<b class="w-6 text-left opacity-70">' + (k + 1) + ".</b>" +
+             (done ? '<b class="text-lg" style="color:' + textCol(c.h) + '">' + c.name + "</b>" : "") + "</div>";
     }).join("");
   }
   $("pad").onclick = function (e) { var b = e.target.closest("button"); if (b) answer(+b.dataset.i, b); };
@@ -693,12 +690,17 @@
     b.style.transition = "none"; b.style.width = w;
   }
 
-  // drillStart("pyt" | "naz" | "kol" | "egz"); with no argument the same drill again
+  // drillStart("kol" | "pn" | "egz"); with no argument the same drill again
   function drillStart(m) {
     if (m) mode = m;
     round++;
-    deck = mode === "egz" ? dealExam() : dealOne(mode, MODES[mode].n);
-    cardI = 0; nFast = 0; nOk = 0; nPts = 0;
+    deck = mode === "egz" ? dealMix(["pyt", "naz", "num"], 5) : mode === "pn" ? dealMix(["pyt", "naz"], 5)
+         : CASES.map(function (c, i) { return { type: "ord", i: i }; });
+    cardI = 0; nFast = 0; nOk = 0; nPts = 0; padType = null;
+    $("dS").innerHTML = sentHtml(-1);
+    $("dS").style.display = mode === "egz" ? "none" : "";
+    $("dQ").style.display = mode === "kol" ? "none" : "";
+    $("dO").style.display = mode === "kol" ? "flex" : "none";
     show("drill");
     nextCard();
     log("drill " + mode + ": " + deck.map(function (c) { return c.type + ":" + CASES[c.i].ab; }).join(" · "));
@@ -707,10 +709,12 @@
     if (pz) { pz.next = true; return; }   // paused: the card (or the result) comes when the child goes on
     if (cardI >= deck.length) { finish(); return; }
     card = deck[cardI];
+    miss = false;
     padFor(card.type);
-    Array.prototype.forEach.call($("pad").children, function (b) { b.classList.remove("btn-success"); });
+    Array.prototype.forEach.call($("pad").children, function (b) { b.classList.remove("btn-success", "xNo", "ring-4", "ring-warning"); });
     $("dPr").textContent = t("q_" + card.type);
-    $("dQ").textContent = cardText(card);
+    if (card.type === "ord") $("dO").innerHTML = slotsHtml();
+    else $("dQ").textContent = cardText(card);
     $("dQ").classList.remove("xNo");
     $("dFb").textContent = "";
     $("dWin").className = "win";
@@ -723,9 +727,9 @@
   }
   function answer(i, btn) {
     if (locked) return;
+    if (card.type === "ord") { ordAnswer(i, btn); return; }
     locked = true;
-    var ms = Math.round(performance.now() - cardT0), c = CASES[card.i], q = cardText(card),
-        pick = card.type === "pyt" ? CASES[i].q : card.type === "naz" ? CASES[i].name : String(i + 1);
+    var ms = Math.round(performance.now() - cardT0), c = CASES[card.i], q = cardText(card), pick = pickText(card.type, i);
     barStop();
     cardI++;
     if (i === card.i) {
@@ -760,6 +764,41 @@
       log(card.type + " " + q + " → " + pick + " ✗ (wanted " + c.name + ")");
     }
   }
+  // Kolejność: the right name goes into its slot (its button stays as an empty place, so the others do not move).
+  // A wrong tap shakes that button and the right one glows; the step then counts as wrong, the child taps the right
+  // one to go on
+  function ordAnswer(i, btn) {
+    var ms = Math.round(performance.now() - cardT0), c = CASES[card.i];
+    if (i !== card.i) {
+      sfx("bad");
+      btn.classList.remove("xNo"); void btn.offsetWidth; btn.classList.add("xNo");
+      if (!miss) {
+        miss = true; barStop();
+        $("pad").querySelector('[data-i="' + card.i + '"]').classList.add("ring-4", "ring-warning");
+      }
+      log("ord " + (cardI + 1) + " → " + CASES[i].name + " ✗ (wanted " + c.name + ")");
+      return;
+    }
+    locked = true;
+    barStop();
+    btn.classList.add("invisible");
+    if (miss) {
+      $("dFb").textContent = "";
+      log("ord " + (cardI + 1) + " → " + c.name + " ✓ after a wrong tap");
+    } else {
+      var fast = ms <= FAST_MS, pts = points(ms);
+      nOk++; if (fast) nFast++;
+      nPts += pts;
+      sfx("good");
+      $("dFb").innerHTML = t(fast ? "fb_fast" : "fb_ok") + ' <b class="pop text-warning">+' + pts + "</b>";
+      $("dScore").textContent = nPts;
+      log("ord " + (cardI + 1) + " → " + c.name + " ✓ " + (ms / 1000).toFixed(3) + "s +" + pts + (fast ? " ⚡" : " (slow)"));
+    }
+    cardI++;
+    $("dO").innerHTML = slotsHtml();
+    var r = round;
+    setTimeout(function () { if (r === round) nextCard(); }, 450);
+  }
   // „Dalej" slides the sheet down first; the next card comes when the slide ends
   $("dNext").onclick = function () {
     var w = $("dWin");
@@ -776,7 +815,7 @@
   var pz = null;
   function pauseOpen() {
     if (pz) return;
-    pz = { ms: locked ? -1 : performance.now() - cardT0, next: false, go: "" };
+    pz = { ms: locked || miss ? -1 : performance.now() - cardT0, next: false, go: "" };
     barStop();
     $("pauseAsk").showModal();
     log("pause · card " + (cardI + 1) + " / " + deck.length);
