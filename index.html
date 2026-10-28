@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="pl" data-theme="dojo" class="h-full">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Krasnoludki</title>
+<link rel="stylesheet" href="lib/daisyui.css">
+<link rel="stylesheet" href="lib/daisyui-themes.css">
+<link rel="stylesheet" href="theme-milioni.css">
+<script src="lib/tailwind.js"></script>
+<script src="sim-bridge.js"></script>
+<style type="text/tailwindcss">
+  /* Register daisyUI colours with Tailwind, otherwise opacity variants like text-base-content/60 do not exist.
+     Keep this block first; an @apply of an unknown class stops ALL Tailwind on the page. */
+  @theme reference {
+    --color-base-100: var(--color-base-100); --color-base-200: var(--color-base-200); --color-base-300: var(--color-base-300);
+    --color-base-content: var(--color-base-content);
+    --color-primary: var(--color-primary); --color-primary-content: var(--color-primary-content);
+    --color-secondary: var(--color-secondary); --color-secondary-content: var(--color-secondary-content);
+    --color-accent: var(--color-accent); --color-accent-content: var(--color-accent-content);
+    --color-neutral: var(--color-neutral); --color-neutral-content: var(--color-neutral-content);
+    --color-info: var(--color-info); --color-success: var(--color-success);
+    --color-warning: var(--color-warning); --color-error: var(--color-error);
+  }
+  /* Screens: exactly one visible at a time */
+  #app > section { display: none; }
+  #app > section.on { display: flex; }
+  /* Theme swatch (from Ninja 10): the inner .sw carries data-theme, so its dots are painted in that theme */
+  .swb { border-radius: 14px; padding: 0; height: 34px; }
+  .swb.cur { outline: 3px solid var(--color-primary); outline-offset: 2px; }
+  .sw { display: flex; gap: 4px; justify-content: center; align-items: center; height: 100%; border-radius: 12px;
+        background: var(--color-base-100); border: 2px solid var(--color-base-300); }
+  .sw > i { width: 14px; height: 14px; border-radius: 50%; }
+  /* the exam's wrong answer: no sheet, no right answer — the card shakes once in red */
+  .xNo { color: var(--color-error); animation: xNo .45s; }
+  @keyframes xNo { 0%, 100% { transform: none; } 20% { transform: translateX(-8px); } 40% { transform: translateX(8px); }
+                   60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+  /* „+75" after a correct answer pops up next to the feedback line */
+  .pop { display: inline-block; animation: pop .6s ease-out; }
+  @keyframes pop { 0% { transform: translateY(10px) scale(.5); opacity: 0; } 40% { transform: translateY(-4px) scale(1.2); opacity: 1; }
+                   100% { transform: none; opacity: 1; } }
+  /* a gnome that just appeared (lesson, wrong-answer sheet) pops in */
+  .gPop { animation: cellPop .45s cubic-bezier(.3, 1.6, .6, 1) both; }
+  @keyframes cellPop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
+  /* the result's seven gnomes when the drill is memorized: they hop, one after the other */
+  .dance > * { display: inline-block; animation: dance .5s ease-in-out infinite alternate; }
+  .dance > :nth-child(2) { animation-delay: .07s; } .dance > :nth-child(3) { animation-delay: .14s; }
+  .dance > :nth-child(4) { animation-delay: .21s; } .dance > :nth-child(5) { animation-delay: .28s; }
+  .dance > :nth-child(6) { animation-delay: .35s; } .dance > :nth-child(7) { animation-delay: .42s; }
+  @keyframes dance { from { transform: translateY(0) rotate(-6deg); } to { transform: translateY(-10px) rotate(6deg); } }
+
+  /* result screen (as Ninja 10): „Teraz" | „Rekord"; #res gets .rBeat when the counting score passes the old record */
+  .tag { display: inline-block; max-width: 100%; padding: 4px 18px; border-radius: 14px; border: 3px solid #1d1b2e;
+         box-shadow: 0 0 0 3.5px #fff, 0 4px 0 3.5px rgba(0,0,0,.25); font-weight: 800; white-space: nowrap;
+         transform: rotate(-3deg); }
+  .tag.gold { background: var(--color-warning); color: var(--color-warning-content); }
+  .tag.rPop { transform: scale(0) rotate(-3deg); }
+  #res.rBeat .tag.rPop { animation: recPop .5s cubic-bezier(.3, 1.7, .5, 1) forwards; }
+  @keyframes recPop { 0% { transform: scale(0) rotate(-3deg); } 100% { transform: scale(1) rotate(-3deg); } }
+  .rStrike { position: relative; display: inline-block; }
+  .rStrike::after { content: ""; position: absolute; left: -8%; top: 50%; height: 5px; width: 0; border-radius: 3px;
+                    background: var(--color-warning); transform: rotate(-14deg); transform-origin: left; transition: width .35s ease-out; }
+  #res.rBeat .rStrike::after { width: 116%; }
+  .rOld { transition: opacity .4s; }
+  #res.rBeat .rOld { opacity: .5; }
+  .rGlow { transition: box-shadow .4s, border-color .4s; }
+  #res.rBeat .rGlow { border-color: var(--color-warning);
+                      box-shadow: 0 0 0 3px var(--color-warning), 0 0 26px color-mix(in oklab, var(--color-warning) 55%, transparent); }
+  .rBs { position: absolute; left: 50%; top: 50%; width: 18px; height: 18px; margin: -9px; pointer-events: none; z-index: 20;
+         animation: recBs .95s ease-out forwards; }
+  .rBs svg { width: 100%; height: 100%; display: block; }
+  @keyframes recBs { 0% { transform: translate(0, 0) rotate(0) scale(.3); opacity: 1; }
+                     100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(1); opacity: 0; } }
+
+  /* Wrong answer (as Ninja 10): a sheet slides up over the pad; the right gnome pops up on its top edge, half out.
+     Plain base colours — the only red is the small ✕ beside the child's pick. */
+  .win { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; display: none; text-align: center;
+         padding: 62px 16px 22px; border-radius: 28px 28px 0 0;
+         border: 2px solid var(--color-base-300); border-bottom: 0; background: var(--color-base-200);
+         box-shadow: 0 -4px 20px #0004; }
+  .win.on { display: block; animation: winIn .55s cubic-bezier(.3, 1.3, .6, 1) both; }
+  .win.on.off { animation: winOut .3s ease-in both; }
+  .win.on.off * { animation: none !important; }
+  .wg { position: absolute; left: 50%; top: 0; transform: translate(-50%, -58%); }
+  .win.on .wg > * { animation: cellPop .45s .3s cubic-bezier(.3, 1.6, .6, 1) both; }
+  @keyframes winIn { from { transform: translateY(105%); } to { transform: none; } }
+  @keyframes winOut { from { transform: none; } to { transform: translateY(105%); } }
+  #pad { transition: opacity .25s; }
+  #pad.dim { opacity: .2; pointer-events: none; }
+  /* the drill's pause window: an opaque screen behind it — the card must not show */
+  #pauseAsk[open] { background-color: var(--color-base-100); }
+
+  /* a home button (.rec, from Ninja 10): its name above, the record on a darker band along the bottom —
+     „🏆 640" left, ☆ → ⭐ right once memorized. .big = the exam */
+  .btn.rec { padding: 0; gap: 0; overflow: hidden; align-items: stretch; flex-direction: column; }
+  .rec .nm { flex: 1; display: flex; align-items: center; justify-content: center; padding: 10px 6px 6px; }
+  .rec .ft { display: flex; justify-content: space-between; align-items: center; min-height: 1.6rem; padding: 3px 10px;
+             font-size: .78rem; font-weight: 800; background: color-mix(in oklab, var(--color-primary-content) 16%, transparent); }
+  .rec .ft .st0 { opacity: .55; font-size: .95rem; line-height: 1; }
+  .rec .ft .dots { display: flex; gap: 4px; margin: 0 auto; }
+  .rec .ft .dots i { width: 9px; height: 9px; border-radius: 50%; }
+  .rec.big .nm { padding-top: 18px; }
+  .rec.big .ft { font-size: 1rem; padding: 5px 14px; }
+  /* the lesson's seven dots: the case being shown is bigger */
+  #seeDots i { width: 12px; height: 12px; border-radius: 50%; opacity: .4; transition: transform .2s, opacity .2s; }
+  #seeDots i.cur { opacity: 1; transform: scale(1.5); }
+
+  /* ---------- „dojo" (Ninja 10's kid theme): the starry sky behind every screen and the chunky pastel buttons, one hue
+     per button (--h, set on the button). The theme's colours are in theme-milioni.css. Only this theme. ---------- */
+  [data-theme=dojo] body {
+    background:
+      radial-gradient(circle at 12% 14%, rgb(255 255 255 / .85) 0 1.4px, transparent 2px),
+      radial-gradient(circle at 81% 8%, rgb(255 255 255 / .7) 0 1.2px, transparent 1.8px),
+      radial-gradient(circle at 64% 22%, rgb(255 255 255 / .55) 0 1px, transparent 1.6px),
+      radial-gradient(circle at 28% 36%, rgb(255 255 255 / .5) 0 1px, transparent 1.6px),
+      radial-gradient(circle at 90% 41%, rgb(255 255 255 / .6) 0 1.3px, transparent 1.9px),
+      radial-gradient(circle at 7% 58%, rgb(255 255 255 / .45) 0 1px, transparent 1.6px),
+      radial-gradient(circle at 46% 6%, rgb(255 255 255 / .6) 0 1.1px, transparent 1.7px),
+      radial-gradient(circle at 72% 63%, rgb(255 255 255 / .35) 0 1px, transparent 1.6px),
+      radial-gradient(130% 90% at 50% 0%, #3b3184 0%, #211d52 50%, #14122f 100%);
+  }
+  [data-theme=dojo] #app .btn.rec {
+    --L: .82; --C: .065;
+    --btn-color: oklch(var(--L) var(--C) var(--h)); --btn-fg: #1d1b2e; --btn-border: #0000; --btn-inset: 0 0 0 0 #0000;
+    --btn-shadow: 0 5px 0 oklch(calc(var(--L) - .13) var(--C) var(--h)), 0 9px 14px rgb(0 0 0 / .22);
+    border-width: 0; border-radius: 18px; margin-bottom: 5px; font-weight: 800; transition: translate .07s, box-shadow .07s;
+  }
+  [data-theme=dojo] #app .btn.rec:active {
+    --btn-bg: var(--btn-color); translate: 0 4px;
+    --btn-shadow: 0 1px 0 oklch(calc(var(--L) - .13) var(--C) var(--h)), 0 3px 6px rgb(0 0 0 / .2);
+  }
+  [data-theme=dojo] #app .btn.rec.big { --L: .86; --C: .09; }
+  [data-theme=dojo] #home h1 { font-weight: 900; text-shadow: 0 4px 0 rgb(0 0 0 / .28); }
+</style>
+</head>
+<body class="h-full m-0 bg-base-100 text-base-content">
+  <main id="app" class="h-full max-w-3xl mx-auto">
+
+    <!-- home = topic 1's menu (the only topic so far): the seven gnomes (a tap opens the lesson at that one),
+         the lesson, three drills and the exam, each drill with its record -->
+    <section id="home" class="h-full flex-col p-5 gap-4">
+      <div class="flex justify-end">
+        <button id="toSet" class="btn btn-ghost btn-circle text-2xl">⚙️</button>
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <div id="homeG" class="flex justify-center gap-1"></div>
+        <h1 class="text-4xl font-bold text-primary mt-2" data-t="title"></h1>
+        <p class="text-lg opacity-70" data-t="home_sub"></p>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button id="goSee" class="btn btn-primary rec h-auto min-h-20" style="--h:345">
+          <span class="nm text-xl" data-t="home_lesson"></span><span class="ft"><span id="ftSee" class="dots"></span></span></button>
+        <button class="btn btn-primary rec h-auto min-h-20" data-m="pyt" style="--h:155">
+          <span class="nm text-xl" data-t="m_pyt"></span><span class="ft" id="ft_pyt"></span></button>
+        <button class="btn btn-primary rec h-auto min-h-20" data-m="naz" style="--h:250">
+          <span class="nm text-xl" data-t="m_naz"></span><span class="ft" id="ft_naz"></span></button>
+        <button class="btn btn-primary rec h-auto min-h-20" data-m="kol" style="--h:65">
+          <span class="nm text-xl" data-t="m_kol"></span><span class="ft" id="ft_kol"></span></button>
+        <button class="btn btn-primary rec big h-auto min-h-24 col-span-2" data-m="egz" style="--h:85">
+          <span class="nm text-2xl" data-t="m_egz"></span><span class="ft" id="ft_egz"></span></button>
+      </div>
+    </section>
+
+    <!-- lesson, „see": one gnome per screen — number + name, its question, its helper word, an example -->
+    <section id="see" class="h-full flex-col p-5 gap-4">
+      <div class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
+        <h2 class="text-2xl font-bold" data-t="home_lesson"></h2>
+        <span id="seeOf" class="ml-auto text-sm opacity-60"></span>
+      </div>
+      <div id="seeDots" class="flex justify-center gap-3 mt-2"></div>
+      <div class="flex-1 flex flex-col items-center justify-center gap-1 text-center">
+        <div id="seeG" class="mb-3"></div>
+        <p id="seeN" class="text-4xl font-black"></p>
+        <p id="seeQ" class="text-4xl font-bold mt-3"></p>
+        <p id="seeH" class="text-xl opacity-70"></p>
+        <p id="seeE" class="text-lg opacity-60 mt-3"></p>
+      </div>
+      <div class="flex gap-3">
+        <button id="seePrev" class="btn btn-outline btn-primary btn-lg px-6">←</button>
+        <button id="seeNext" class="btn btn-primary btn-lg flex-1" data-t="btn_next"></button>
+      </div>
+    </section>
+
+    <!-- lesson, „say": the order as one funny sentence, each word's first letter in its gnome's colour -->
+    <section id="say" class="h-full flex-col p-5 gap-4 text-center">
+      <div class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
+        <h2 class="text-2xl font-bold" data-t="home_lesson"></h2>
+      </div>
+      <div class="flex-1 flex flex-col items-center justify-center gap-8">
+        <p class="text-2xl font-bold" data-t="say_title"></p>
+        <div id="sayS" class="flex flex-wrap justify-center gap-x-3 gap-y-5"></div>
+        <p class="text-lg opacity-70" data-t="say_tip"></p>
+      </div>
+      <button id="sayOk" class="btn btn-primary btn-lg btn-block" data-t="btn_said"></button>
+    </section>
+
+    <!-- drill: 10 cards (the exam 15), a 5-second bar, seven answer buttons in the cases' order -->
+    <section id="drill" class="h-full flex-col p-5 gap-4 relative overflow-hidden">
+      <div class="flex justify-between items-center">
+        <button id="dPause" class="btn btn-ghost btn-sm text-xl">✕</button>
+        <span id="dCount" class="text-sm opacity-60"></span>
+        <span id="dScore" class="text-lg font-bold text-warning"></span>
+      </div>
+      <div class="h-2 rounded-full bg-base-300 overflow-hidden"><div id="bar" class="h-full bg-primary"></div></div>
+      <div class="flex-1 flex flex-col items-center justify-center gap-3 text-center">
+        <p id="dPr" class="text-lg opacity-70"></p>
+        <div id="dQ" class="text-4xl font-bold leading-tight"></div>
+        <!-- a fixed height: the feedback line must not move the card -->
+        <div id="dFb" class="text-2xl h-8 leading-8"></div>
+      </div>
+      <div id="pad" class="grid grid-cols-2 gap-2"></div>
+      <!-- wrong answer: the child's pick with a small ✕, then the right gnome with its name, question and helper -->
+      <div id="dWin" class="win">
+        <div id="dWg" class="wg"></div>
+        <p id="dWp" class="text-base opacity-70 mb-2"></p>
+        <p id="dWn" class="text-3xl font-black"></p>
+        <p id="dWq" class="text-3xl font-bold mt-1"></p>
+        <p id="dWh" class="text-lg opacity-70 mb-5"></p>
+        <button id="dNext" class="btn btn-primary btn-lg btn-block" data-t="btn_next"></button>
+      </div>
+    </section>
+
+    <!-- result of a round (as Ninja 10): „Rekord" = the record BEFORE this round. Again = the same drill · back = home -->
+    <section id="res" class="h-full flex-col p-5 gap-3 text-center overflow-hidden">
+      <div class="flex-1 flex flex-col items-center justify-center gap-3 w-full">
+        <div id="resEm" class="text-7xl leading-none"></div>
+        <h2 id="resTitle" class="text-2xl font-bold leading-tight"></h2>
+        <div class="relative grid grid-cols-2 gap-3 w-full mt-5">
+          <span id="resNew" class="tag gold rPop absolute z-10 -top-5 left-0 right-0 mx-auto w-max text-lg" data-t="res_rec_new"></span>
+          <div id="resNowBox" class="rGlow relative rounded-box bg-base-200 border-2 border-warning/40 pt-8 pb-3">
+            <div class="text-xs font-bold uppercase tracking-widest opacity-70" data-t="res_now"></div>
+            <div id="resPts" class="text-5xl font-black text-warning tabular-nums"></div>
+          </div>
+          <div class="rOld rounded-box bg-base-200 border-2 border-transparent pt-8 pb-3">
+            <div class="text-xs font-bold uppercase tracking-widest opacity-70" data-t="res_best"></div>
+            <div class="text-5xl font-black tabular-nums"><span id="resRec"></span></div>
+          </div>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <p id="resFast" class="text-lg"></p>
+          <p id="resOk" class="opacity-70"></p>
+        </div>
+      </div>
+      <button id="resAgain" class="btn btn-primary btn-lg btn-block gap-2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span data-t="btn_again"></span></button>
+      <button class="btn btn-outline btn-primary btn-lg btn-block gap-2 quit"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span data-t="btn_back"></span></button>
+    </section>
+
+    <!-- settings: sounds, theme, start over (as Ninja 10, without the ninja, the name and the hints) -->
+    <section id="set" class="h-full flex-col p-5 gap-4 overflow-y-auto">
+      <div class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
+        <h2 class="text-2xl font-bold" data-t="set_title"></h2>
+      </div>
+      <label class="flex items-center justify-between text-lg bg-base-200 rounded-box p-4">
+        <span data-t="set_sound"></span>
+        <input id="sndToggle" type="checkbox" class="toggle toggle-primary toggle-lg">
+      </label>
+      <div class="flex flex-col gap-2 bg-base-200 rounded-box p-4">
+        <span class="text-sm opacity-70" data-t="set_theme"></span>
+        <div id="themes" class="grid grid-cols-3 gap-2"></div>
+      </div>
+      <div class="flex justify-center mt-6">
+        <button id="resetGo" class="link link-error" data-t="set_reset"></button>
+      </div>
+      <button class="btn btn-primary btn-lg btn-block mt-auto shrink-0 quit" data-t="btn_back"></button>
+    </section>
+  </main>
+
+  <!-- ⚙️ „start over": asked once before the whole save is wiped -->
+  <dialog id="resetAsk" class="modal">
+    <div class="modal-box text-center px-4">
+      <p class="text-xl font-bold py-2" data-t="reset_ask"></p>
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button id="resetNo" class="btn btn-lg px-2 whitespace-nowrap" data-t="reset_no"></button>
+        <button id="resetYes" class="btn btn-error btn-lg px-2 whitespace-nowrap" data-t="reset_yes"></button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button tabindex="-1"></button></form>
+  </dialog>
+
+  <!-- the phone's back on home: asked before the app closes -->
+  <dialog id="exitAsk" class="modal">
+    <div class="modal-box text-center px-4">
+      <p class="text-xl font-bold py-2" data-t="exit_ask"></p>
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button id="exitNo" class="btn btn-lg px-2 whitespace-nowrap" data-t="exit_no"></button>
+        <button id="exitYes" class="btn btn-error btn-lg px-2 whitespace-nowrap" data-t="exit_yes"></button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button tabindex="-1"></button></form>
+  </dialog>
+
+  <!-- the drill's pause: the phone's back or ✕ during a round. Again = from card 1 · go on · exit = home -->
+  <dialog id="pauseAsk" class="modal">
+    <div class="modal-box bg-base-200 text-center px-4 flex flex-col gap-3">
+      <p class="text-2xl font-bold py-2" data-t="pause_title"></p>
+      <button id="pauseAgain" class="btn btn-outline btn-primary btn-lg btn-block gap-2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span data-t="btn_again"></span></button>
+      <button id="pauseOn" class="btn btn-primary btn-lg btn-block gap-2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3 20 12 6 21Z"/></svg><span data-t="btn_on"></span></button>
+      <button id="pauseOut" class="btn btn-ghost btn-lg btn-block gap-2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span data-t="btn_exit"></span></button>
+    </div>
+  </dialog>
+
+<script>
+  "use strict";
+  function $(id) { return document.getElementById(id); }
+
+  /* ---------- strings: every string the child can read lives here. Polish only, as Ninja 10. ---------- */
+  var PACK = {
+    pl: {
+      title: "Krasnoludki",
+      home_sub: "Przypadki rzeczownika",
+      home_lesson: "Lekcja",
+      m_pyt: "Pytania",
+      m_naz: "Nazwy",
+      m_kol: "Kolejność",
+      m_egz: "Egzamin",
+      q_pyt: "Na jakie pytania odpowiada?",
+      q_naz: "Który to przypadek?",
+      q_kol: "Który to numer?",
+      see_of: function (n) { return n + " z 7"; },
+      see_ex: "np.",
+      say_title: "Zapamiętaj kolejność!",
+      say_tip: "Powiedz to zdanie na głos trzy razy.",
+      // the textbook's sentence: one word per case, its first letter = the case's first letter
+      say_words: ["Mama", "drozda", "celowo", "była", "na", "miejscu", "wypadku."],
+      btn_said: "Gotowe!",
+      btn_next: "Dalej",
+      fb_fast: "⚡ Szybko!",
+      fb_ok: "Dobrze!",
+      res_master: "Zapamiętane!",
+      res_more: function (n) { return "Jeszcze raz — potrzeba " + n + " szybkich odpowiedzi."; },
+      res_fast: function (n, of) { return "⚡ Szybko i dobrze: " + n + " / " + of; },
+      res_ok: function (n, of) { return "✓ Dobrze: " + n + " / " + of; },
+      btn_again: "Jeszcze raz",
+      btn_back: "Wróć",
+      btn_exit: "Wyjdź",
+      pause_title: "Pauza",
+      btn_on: "Graj dalej",
+      res_rec_new: "🏆 Nowy rekord!",
+      res_now: "Teraz",
+      res_best: "Rekord",
+      set_title: "Ustawienia",
+      set_sound: "Dźwięki",
+      set_theme: "Motyw",
+      set_reset: "Zacznij od nowa",
+      reset_ask: "Na pewno? Wszystkie wyniki znikną.",
+      reset_yes: "Tak, od nowa",
+      reset_no: "Nie",
+      exit_ask: "Zamknąć aplikację?",
+      exit_yes: "Tak, zamknij",
+      exit_no: "Nie",
+      // the seven cases in the textbook's order (p. 73): name, questions, helper word, example (babcia, singular).
+      // ab = the short name from p. 84 · h = the gnome's hat hue (oklch), red → pink like a rainbow
+      cases: [
+        { ab: "M.",  name: "Mianownik",   q: "Kto? Co?",       help: "(jest)",           ex: "babcia",     h: 25 },
+        { ab: "D.",  name: "Dopełniacz",  q: "Kogo? Czego?",   help: "(nie ma)",         ex: "babci",      h: 60 },
+        { ab: "C.",  name: "Celownik",    q: "Komu? Czemu?",   help: "(się przyglądam)", ex: "babci",      h: 95 },
+        { ab: "B.",  name: "Biernik",     q: "Kogo? Co?",      help: "(widzę)",          ex: "babcię",     h: 150 },
+        { ab: "N.",  name: "Narzędnik",   q: "Z kim? Z czym?", help: "(idę)",            ex: "(z) babcią", h: 250 },
+        { ab: "Ms.", name: "Miejscownik", q: "O kim? O czym?", help: "(mówię)",          ex: "(o) babci",  h: 300 },
+        { ab: "W.",  name: "Wołacz",      q: "O!",             help: "(mój drogi!)",     ex: "babciu!",    h: 345 }
+      ]
+    }
+  };
+  var CASES = PACK.pl.cases;
+
+  /* ---------- settings ---------- */
+  var FAST_MS = 5000;            // an answer counts as "known by heart" only under this (reading takes longer than a sum)
+  // a round's size and its „memorized" line: 8 of 10 fast and right (as Ninja 10); the exam 12 of 15 (the same 80 %)
+  var MODES = { pyt: { n: 10, m: 8 }, naz: { n: 10, m: 8 }, kol: { n: 10, m: 8 }, egz: { n: 15, m: 12 } };
+  // Points for a right answer: 100 at once, down to 20 at FAST_MS, never below 20. Wrong = 0.
+  var PTS_MAX = 100, PTS_MIN = 20;
+  function points(ms) { return Math.max(PTS_MIN, Math.round(PTS_MAX - (PTS_MAX - PTS_MIN) * ms / FAST_MS)); }
+  var SAVE_KEY = "krasnoludki_v1";   // a change to the saved shape needs a migration in load() · gitleaks:allow (a storage key, no secret)
+
+  /* ---------- state + save ---------- */
+  // Ninja 10's 6 themes, dojo first — same list as sim.html
+  var THEMES = ["dojo", "forest", "dracula", "night", "milioni", "milioni-light"];
+  var DEFAULT_THEME = "dojo";
+  // S.best: drill → { pts: the best points, fast, ok: of the best round, master: memorized once }
+  var S = { lang: "pl", best: {}, sound: true, theme: null };
+  function load() {
+    try {
+      var d = JSON.parse(localStorage.getItem(SAVE_KEY));
+      if (d && d.best && typeof d.best === "object") S.best = d.best;
+      if (d && typeof d.sound === "boolean") S.sound = d.sound;
+      if (d && THEMES.indexOf(d.theme) >= 0) S.theme = d.theme;
+    } catch (e) { log("load failed: " + e.message); }
+  }
+  function save() {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { log("save failed: " + e.message); }
+  }
+
+  function t(k) {
+    var v = PACK[S.lang][k];
+    if (v === undefined) { log("missing key <b>" + k + "</b> in " + S.lang); return k; }
+    return typeof v === "function" ? v.apply(null, Array.prototype.slice.call(arguments, 1)) : v;
+  }
+  function applyLang() {
+    document.documentElement.lang = S.lang;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function (el) { el.textContent = t(el.dataset.t); });
+  }
+
+  /* ---------- theme ---------- */
+  function applyTheme() {
+    var cur = S.theme || DEFAULT_THEME;
+    document.documentElement.setAttribute("data-theme", cur);
+    Array.prototype.forEach.call($("themes").children, function (b) { b.classList.toggle("cur", b.dataset.th === cur); });
+  }
+  (function buildThemes() {
+    $("themes").innerHTML = THEMES.map(function (th) {
+      return '<button class="btn swb" data-th="' + th + '"><span class="sw w-full" data-theme="' + th + '">' +
+        '<i style="background:var(--color-primary)"></i><i style="background:var(--color-secondary)"></i>' +
+        '<i style="background:var(--color-accent)"></i></span></button>';
+    }).join("");
+    Array.prototype.forEach.call($("themes").children, function (b) {
+      b.onclick = function () { S.theme = b.dataset.th; save(); applyTheme(); log("theme → " + S.theme); };
+    });
+  })();
+  // The simulator answers "ready" with its own remembered theme: the app's saved choice wins that first
+  // answer; every later pick in the sim panel counts as the user's choice.
+  var simFirst = true;
+  window.addEventListener("message", function (e) {
+    var m = e.data || {};
+    if (m.type !== "theme") return;
+    if (!(simFirst && S.theme) && THEMES.indexOf(m.theme) >= 0) { S.theme = m.theme; save(); }
+    simFirst = false;
+    applyTheme();
+  });
+
+  /* ---------- sounds (Ninja 10's): the click is Audiof/tap-a.ogg; good / bad / yes are built in code (Web Audio) ---------- */
+  var CLICK = new Audio("Audiof/tap-a.ogg"); CLICK.preload = "auto"; CLICK.volume = 0.5;
+  var SYN = (function () {
+    function tone(c, dst, o) {                  // o = {t, f, type?, p, a?, d}
+      var osc = c.createOscillator(), g = c.createGain(), t = o.t, a = o.a || 0.005, d = o.d;
+      osc.type = o.type || "sine";
+      osc.frequency.setValueAtTime(o.f, t);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(o.p, t + a);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + a + d);
+      osc.connect(g); g.connect(dst); osc.start(t); osc.stop(t + a + d + 0.02);
+    }
+    function noiseBuf(c) {
+      if (!c._nb) {
+        var n = Math.floor(c.sampleRate * 1.5), b = c.createBuffer(1, n, c.sampleRate), d = b.getChannelData(0);
+        for (var i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+        c._nb = b;
+      }
+      return c._nb;
+    }
+    // a short swish: band-passed noise sweeping up
+    function whoosh(c, dst, t, d, p) {
+      var s = c.createBufferSource(), bq = c.createBiquadFilter(), g = c.createGain();
+      s.buffer = noiseBuf(c);
+      bq.type = "bandpass"; bq.Q.value = 1.5;
+      bq.frequency.setValueAtTime(500, t);
+      bq.frequency.exponentialRampToValueAtTime(2600, t + d);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(p, t + d * 0.5);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      s.connect(bq); bq.connect(g); g.connect(dst); s.start(t); s.stop(t + d + 0.02);
+    }
+    // small bell: inharmonic partials of a free bar
+    function bell(c, dst, t, f, p, len) {
+      [[1, 1, 1], [2.76, 0.4, 0.55], [5.4, 0.18, 0.3], [8.93, 0.07, 0.18]].forEach(function (k) {
+        tone(c, dst, { t: t, f: f * k[0], p: p * k[1], a: 0.002, d: len * k[2] });
+      });
+    }
+    return {
+      good: function (c, d, t) { whoosh(c, d, t, 0.16, 0.3); bell(c, d, t + 0.15, 1760, 0.32, 0.32); },
+      bad: function (c, d, t) {
+        tone(c, d, { t: t, f: 392, type: "triangle", p: 0.3, a: 0.01, d: 0.22 });
+        tone(c, d, { t: t + 0.16, f: 294, type: "triangle", p: 0.3, a: 0.01, d: 0.32 });
+      },
+      yes: function (c, d, t) {
+        [1568, 1760, 2093].forEach(function (f, i) { whoosh(c, d, t + i * 0.22, 0.15, 0.25); bell(c, d, t + i * 0.22 + 0.14, f, 0.28, 0.32); });
+        [1047, 1568, 2093].forEach(function (f) { bell(c, d, t + 0.75, f, 0.16, 1.3); });
+      }
+    };
+  })();
+  var LEVEL = { good: 1.9, bad: 1.7, yes: 1 };
+  var AC = null;
+  function sfx(name) {
+    if (!S.sound) return;
+    try {
+      if (name === "click") { CLICK.currentTime = 0; var p = CLICK.play(); if (p && p.catch) p.catch(function () {}); return; }
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === "suspended") AC.resume();
+      var g = AC.createGain(); g.gain.value = LEVEL[name]; g.connect(AC.destination);
+      SYN[name](AC, g, AC.currentTime + 0.02);
+    } catch (e) {}
+  }
+  // a click on every button, except the answer pad (its answer has its own good / bad sound)
+  document.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (b && !b.closest("#pad")) sfx("click");
+  }, true);
+  $("sndToggle").onchange = function () {
+    S.sound = $("sndToggle").checked; save(); sfx("click"); log("sound → " + (S.sound ? "on" : "off"));
+  };
+
+  /* ---------- the gnome (own drawing, sticker style as Ninja 10's ninja: dark outline) ----------
+     gnomeSvg(i, w): case i's gnome, w px wide. The hat wears the case's hue; a few carry the textbook's hint:
+     D (nie ma) is faded — it is not there · C (się przyglądam) big eyes · B (widzę) binoculars · Ms (mówię)
+     speech lines · W (o!) waves */
+  var INK = "#1d1b2e", SKIN = "#ffd9b8";
+  function hatCol(h) { return "oklch(.7 .16 " + h + ")"; }
+  function textCol(h) { return "oklch(.72 .15 " + h + ")"; }
+  var BEARD = [[35, 61, 8], [39, 71, 9], [50, 76, 10], [61, 71, 9], [65, 61, 8], [50, 66, 10]];
+  function gnomeSvg(i, w) {
+    var h = CASES[i].h, o = ' stroke="' + INK + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
+    function beard(extra) {
+      return BEARD.map(function (b) { return '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="' + b[2] + '"' + extra + "/>"; }).join("");
+    }
+    var s = '<svg viewBox="0 0 100 124" width="' + w + '" height="' + Math.round(w * 1.24) + '"' +
+            (i === 1 ? ' opacity=".35"' : "") + ' aria-hidden="true">';
+    s += '<ellipse cx="39" cy="116" rx="8" ry="4.5" fill="' + INK + '"/><ellipse cx="61" cy="116" rx="8" ry="4.5" fill="' + INK + '"/>';
+    if (i === 3) {         // both hands up to the binoculars, behind the beard
+      s += '<path d="M32 80 L38 56 M68 80 L62 56" fill="none"' + o + "/>";
+    } else {
+      s += '<path d="M32 82 L20 95" fill="none"' + o + '/><circle cx="19" cy="97" r="4" fill="' + SKIN + '"' + o + "/>";
+      s += i === 6 ? '<path d="M68 80 L82 62" fill="none"' + o + '/><circle cx="84" cy="59" r="4.5" fill="' + SKIN + '"' + o + "/>"
+                   : '<path d="M68 82 L80 95" fill="none"' + o + '/><circle cx="81" cy="97" r="4" fill="' + SKIN + '"' + o + "/>";
+    }
+    s += '<path d="M35 74 L65 74 L76 112 L24 112 Z" fill="oklch(.84 .05 ' + h + ')"' + o + "/>";
+    s += '<circle cx="50" cy="51" r="17" fill="' + SKIN + '"' + o + "/>";
+    // the beard: an outline pass, then the white on top, so the circles merge into one cloud
+    s += '<g fill="#fff" stroke="' + INK + '" stroke-width="6">' + beard("") + '</g><g fill="#fff">' + beard("") + "</g>";
+    if (i === 2) {
+      s += '<circle cx="42" cy="49" r="5.5" fill="#fff"' + o + '/><circle cx="58" cy="49" r="5.5" fill="#fff"' + o + "/>" +
+           '<circle cx="43" cy="50" r="2.4" fill="' + INK + '"/><circle cx="57" cy="50" r="2.4" fill="' + INK + '"/>';
+    } else if (i !== 3) {
+      s += '<ellipse cx="43" cy="50" rx="2.6" ry="3.3" fill="' + INK + '"/><ellipse cx="57" cy="50" rx="2.6" ry="3.3" fill="' + INK + '"/>';
+    }
+    s += '<circle cx="50" cy="57" r="5.5" fill="#ff9eb0"' + o + "/>";
+    if (i === 5) s += '<path d="M78 50 q5 6 0 12 M85 45 q8 11 0 22" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/>';
+    s += '<path d="M29 42 Q40 23 53 3 Q60 23 71 42 Q50 47 29 42 Z" fill="' + hatCol(h) + '"' + o + "/>";
+    if (i === 3) {
+      s += '<rect x="45" y="45" width="10" height="5" rx="2" fill="#6b7394"' + o + "/>" +
+           '<circle cx="41" cy="48" r="7" fill="#6b7394"' + o + '/><circle cx="59" cy="48" r="7" fill="#6b7394"' + o + "/>" +
+           '<circle cx="41" cy="48" r="3.2" fill="#cfe3ff"/><circle cx="59" cy="48" r="3.2" fill="#cfe3ff"/>';
+    }
+    return s + "</svg>";
+  }
+  function dotsHtml() {
+    return CASES.map(function (c) { return '<i style="background:' + hatCol(c.h) + '"></i>'; }).join("");
+  }
+
+  /* ---------- screens ---------- */
+  var current = null;
+  function show(id) {
+    current = id;
+    Array.prototype.forEach.call($("app").children, function (s) { s.classList.toggle("on", s.id === id); });
+    simScreen(id);
+  }
+  var round = 0;                 // bumped on leave, so a pending card timer from the old round does nothing
+  function goHome() { round++; barStop(); renderBest(); show("home"); }
+
+  /* ---------- the phone's back button (as Ninja 10) ----------
+     Back = one screen back: an open dialog closes · the lesson steps back gnome by gnome, its first → home ·
+     a drill → the pause window · every other screen → home · home → „close the app?" */
+  function back() {
+    if ($("exitAsk").open) $("exitAsk").close();
+    else if ($("resetAsk").open) $("resetAsk").close();
+    else if ($("pauseAsk").open) $("pauseAsk").close();
+    else if (current === "see" && seeI > 0) { seeI--; seeShow(); }
+    else if (current === "say") { seeI = CASES.length - 1; seeShow(); show("see"); }
+    else if (current === "drill") pauseOpen();
+    else if (current !== "home") goHome();
+    else { $("exitAsk").showModal(); log("back: close the app?"); }
+  }
+  // In sim.html the ◁ comes through onBack. On a real phone the browser's back is caught by a CloseWatcher
+  // (Chrome 120+), elsewhere by one extra history entry. Either is used up by one press and made again right after it.
+  var atTop = window.parent === window, watcher = null;
+  function armBack() {
+    if (!atTop) return;
+    if (window.CloseWatcher) { watcher = new CloseWatcher(); watcher.onclose = function () { back(); armBack(); }; }
+    else history.pushState({ back: 1 }, "");
+  }
+  onBack(back);
+  if (atTop && !window.CloseWatcher) window.addEventListener("popstate", function () { back(); armBack(); });
+  armBack();
+  $("exitNo").onclick = function () { $("exitAsk").close(); };
+  $("exitYes").onclick = function () {
+    $("exitAsk").close();
+    if (!atTop) { log("<b>exit</b>: on the phone the app closes here"); return; }
+    if (watcher) watcher.destroy();
+    window.close();
+    if (!window.closed) history.go(window.CloseWatcher ? -1 : -2);
+  };
+  Array.prototype.forEach.call(document.querySelectorAll(".quit"), function (b) { b.onclick = goHome; });
+
+  /* ---------- home ---------- */
+  function renderBest() {
+    Object.keys(MODES).forEach(function (m) {
+      var b = S.best[m];
+      $("ft_" + m).innerHTML = "<span>" + (b && b.pts ? "🏆 " + b.pts : "") + "</span>" +
+        (b && b.master ? "<span>⭐</span>" : '<span class="st0">☆</span>');
+    });
+  }
+  $("homeG").innerHTML = CASES.map(function (c, i) {
+    return '<button class="cursor-pointer" data-i="' + i + '" aria-label="' + c.name + '">' + gnomeSvg(i, 40) + "</button>";
+  }).join("");
+  $("homeG").onclick = function (e) { var b = e.target.closest("button"); if (b) openSee(+b.dataset.i); };
+  $("ftSee").innerHTML = dotsHtml();
+  $("goSee").onclick = function () { openSee(0); };
+  Array.prototype.forEach.call(document.querySelectorAll("#home [data-m]"), function (b) {
+    b.onclick = function () { drillStart(b.dataset.m); };
+  });
+  $("toSet").onclick = function () { show("set"); };
+
+  /* ---------- lesson: see (one gnome per screen) → say (the sentence) → home ---------- */
+  var seeI = 0;
+  $("seeDots").innerHTML = dotsHtml();
+  function openSee(i) { seeI = i; seeShow(); show("see"); log("lesson from " + CASES[i].name); }
+  function seeShow() {
+    var c = CASES[seeI];
+    $("seeOf").textContent = t("see_of", seeI + 1);
+    Array.prototype.forEach.call($("seeDots").children, function (d, j) { d.classList.toggle("cur", j === seeI); });
+    $("seeG").innerHTML = '<div class="gPop">' + gnomeSvg(seeI, 120) + "</div>";
+    $("seeN").textContent = (seeI + 1) + ". " + c.name;
+    $("seeN").style.color = textCol(c.h);
+    $("seeQ").textContent = c.q;
+    $("seeH").textContent = c.help;
+    $("seeE").textContent = t("see_ex") + " " + c.ex;
+    $("seePrev").style.visibility = seeI > 0 ? "" : "hidden";
+  }
+  $("seePrev").onclick = function () { if (seeI > 0) { seeI--; seeShow(); } };
+  $("seeNext").onclick = function () {
+    if (seeI < CASES.length - 1) { seeI++; seeShow(); }
+    else { show("say"); log("lesson: the sentence"); }
+  };
+  $("sayS").innerHTML = t("say_words").map(function (w, i) {
+    var col = textCol(CASES[i].h);
+    return '<span class="flex flex-col items-center"><span class="text-3xl font-bold"><b class="text-4xl font-black" style="color:' +
+           col + '">' + w.charAt(0).toUpperCase() + "</b>" + w.slice(1) + '</span><span class="text-sm font-bold mt-1" style="color:' +
+           col + '">' + CASES[i].ab + "</span></span>";
+  }).join("");
+  $("sayOk").onclick = function () { log("lesson done"); goHome(); };
+
+  /* ---------- drill ----------
+     A card = { type, i }: „pyt" shows the name → pick the questions · „naz" shows the questions → pick the name ·
+     „kol" shows the name → pick its number. The seven answers always stand in the cases' order. The exam mixes all
+     three (5 of each), gives no help on a wrong answer and never shows the right one. */
+  var mode = null, deck = [], card = null, cardI = 0, nFast = 0, nOk = 0, nPts = 0, cardT0 = 0, locked = true, padType = null;
+  function shuffle(d) {
+    for (var i = d.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = d[i]; d[i] = d[j]; d[j] = x; }
+    return d;
+  }
+  // n cards of one type: the seven in a random order, again and again, never the same case twice in a row
+  function dealOne(type, n) {
+    var out = [];
+    while (out.length < n) {
+      var s = shuffle([0, 1, 2, 3, 4, 5, 6]);
+      if (out.length && s[0] === out[out.length - 1].i) s.push(s.shift());
+      s.forEach(function (i) { if (out.length < n) out.push({ type: type, i: i }); });
+    }
+    return out;
+  }
+  function dealExam() {
+    var d = dealOne("pyt", 5).concat(dealOne("naz", 5), dealOne("kol", 5));
+    for (var k = 0; k < 50; k++) {
+      shuffle(d);
+      if (d.every(function (c, j) { return !j || c.i !== d[j - 1].i; })) break;
+    }
+    return d;
+  }
+  function cardText(c) { return c.type === "naz" ? CASES[c.i].q : CASES[c.i].name; }
+  function padFor(type) {
+    if (padType === type) return;
+    padType = type;
+    $("pad").classList.toggle("grid-cols-2", type !== "kol");
+    $("pad").classList.toggle("grid-cols-7", type === "kol");
+    $("pad").innerHTML = CASES.map(function (c, i) {
+      var lab = type === "pyt" ? c.q : type === "naz" ? c.name : String(i + 1);
+      return '<button class="btn h-auto min-h-12 py-2 px-1 text-lg font-bold' + (type !== "kol" && i === 6 ? " col-span-2" : "") +
+             (type === "kol" ? " min-h-16 text-2xl" : "") + '" data-i="' + i + '">' + lab + "</button>";
+    }).join("");
+  }
+  $("pad").onclick = function (e) { var b = e.target.closest("button"); if (b) answer(+b.dataset.i, b); };
+
+  function barRun(gone) {
+    var b = $("bar"), g = Math.min(gone || 0, FAST_MS);
+    b.style.transition = "none"; b.style.width = (100 - g / FAST_MS * 100) + "%";
+    void b.offsetWidth;          // commit the start width before the transition starts
+    b.style.transition = "width " + (FAST_MS - g) + "ms linear"; b.style.width = "0%";
+  }
+  function barStop() {
+    var b = $("bar"), w = getComputedStyle(b).width;
+    b.style.transition = "none"; b.style.width = w;
+  }
+
+  // drillStart("pyt" | "naz" | "kol" | "egz"); with no argument the same drill again
+  function drillStart(m) {
+    if (m) mode = m;
+    round++;
+    deck = mode === "egz" ? dealExam() : dealOne(mode, MODES[mode].n);
+    cardI = 0; nFast = 0; nOk = 0; nPts = 0;
+    show("drill");
+    nextCard();
+    log("drill " + mode + ": " + deck.map(function (c) { return c.type + ":" + CASES[c.i].ab; }).join(" · "));
+  }
+  function nextCard() {
+    if (pz) { pz.next = true; return; }   // paused: the card (or the result) comes when the child goes on
+    if (cardI >= deck.length) { finish(); return; }
+    card = deck[cardI];
+    padFor(card.type);
+    Array.prototype.forEach.call($("pad").children, function (b) { b.classList.remove("btn-success"); });
+    $("dPr").textContent = t("q_" + card.type);
+    $("dQ").textContent = cardText(card);
+    $("dQ").classList.remove("xNo");
+    $("dFb").textContent = "";
+    $("dWin").className = "win";
+    $("pad").classList.remove("dim");
+    $("dCount").textContent = (cardI + 1) + " / " + deck.length;
+    $("dScore").textContent = nPts;
+    barRun();
+    cardT0 = performance.now();
+    locked = false;
+  }
+  function answer(i, btn) {
+    if (locked) return;
+    locked = true;
+    var ms = Math.round(performance.now() - cardT0), c = CASES[card.i], q = cardText(card),
+        pick = card.type === "pyt" ? CASES[i].q : card.type === "naz" ? CASES[i].name : String(i + 1);
+    barStop();
+    cardI++;
+    if (i === card.i) {
+      var fast = ms <= FAST_MS, pts = points(ms);
+      nOk++; if (fast) nFast++;
+      nPts += pts;
+      sfx("good");
+      btn.classList.add("btn-success");
+      $("dFb").innerHTML = t(fast ? "fb_fast" : "fb_ok") + ' <b class="pop text-warning">+' + pts + "</b>";
+      $("dScore").textContent = nPts;
+      log(card.type + " " + q + " → " + pick + " ✓ " + (ms / 1000).toFixed(3) + "s +" + pts + (fast ? " ⚡" : " (slow)"));
+      var r = round;
+      setTimeout(function () { if (r === round) nextCard(); }, 700);
+    } else if (mode === "egz") {
+      sfx("bad");
+      $("dQ").classList.add("xNo");
+      log(card.type + " " + q + " → " + pick + " ✗ (wanted " + c.name + ") · exam: no help");
+      var r2 = round;
+      setTimeout(function () { if (r2 === round) nextCard(); }, 900);
+    } else {
+      // wrong: the sheet slides up — the child's pick with ✕, then the right gnome, its number + name, questions, helper
+      sfx("bad");
+      $("dWg").innerHTML = gnomeSvg(card.i, 84);
+      $("dWp").innerHTML = '<b class="text-error">✕</b> ' + pick;
+      $("dWn").textContent = (card.i + 1) + ". " + c.name;
+      $("dWn").style.color = textCol(c.h);
+      $("dWq").textContent = c.q;
+      $("dWh").textContent = c.help;
+      $("pad").classList.add("dim");
+      var w = $("dWin");
+      w.className = "win"; void w.offsetWidth; w.classList.add("on");   // restart the slide-up
+      log(card.type + " " + q + " → " + pick + " ✗ (wanted " + c.name + ")");
+    }
+  }
+  // „Dalej" slides the sheet down first; the next card comes when the slide ends
+  $("dNext").onclick = function () {
+    var w = $("dWin");
+    if (w.classList.contains("on") && !w.classList.contains("off")) w.classList.add("off");
+  };
+  $("dWin").addEventListener("animationend", function (e) {
+    var w = $("dWin");
+    if (e.target !== w || !w.classList.contains("off")) return;
+    nextCard();
+  });
+
+  // The pause (as Ninja 10): back or ✕ in a drill. pz = { ms: the card's clock so far (-1 = not running), next: a card
+  // that came due meanwhile, go: the child's pick }. However the window closes, its „close" decides.
+  var pz = null;
+  function pauseOpen() {
+    if (pz) return;
+    pz = { ms: locked ? -1 : performance.now() - cardT0, next: false, go: "" };
+    barStop();
+    $("pauseAsk").showModal();
+    log("pause · card " + (cardI + 1) + " / " + deck.length);
+  }
+  function pauseGo(go) { pz.go = go; $("pauseAsk").close(); }
+  $("dPause").onclick = pauseOpen;
+  $("pauseAgain").onclick = function () { pauseGo("again"); };
+  $("pauseOn").onclick = function () { pauseGo("on"); };
+  $("pauseOut").onclick = function () { pauseGo("out"); };
+  $("pauseAsk").addEventListener("close", function () {
+    var p = pz; pz = null;
+    if (!p) return;
+    log("pause → " + (p.go || "on"));
+    if (p.go === "again") drillStart();
+    else if (p.go === "out") goHome();
+    else if (p.next) nextCard();
+    else if (p.ms >= 0) { cardT0 = performance.now() - p.ms; barRun(p.ms); }
+  });
+
+  /* ---------- result ---------- */
+  function finish() {
+    var need = MODES[mode].m, b = S.best[mode] || { fast: 0, ok: 0, master: false }, master = nFast >= need;
+    if (nFast > b.fast || (nFast === b.fast && nOk > b.ok)) { b.fast = nFast; b.ok = nOk; }
+    b.master = b.master || master;
+    var prev = b.pts, newRec = nPts > 0 && (prev === undefined || nPts > prev);
+    if (newRec) b.pts = nPts;
+    S.best[mode] = b; save();
+    $("resEm").innerHTML = master ? '<div class="dance flex gap-1 justify-center">' +
+      CASES.map(function (c, i) { return "<span>" + gnomeSvg(i, 38) + "</span>"; }).join("") + "</div>" : "💪";
+    $("resTitle").textContent = master ? t("res_master") : t("res_more", need);
+    $("resFast").textContent = t("res_fast", nFast, deck.length);
+    $("resOk").textContent = t("res_ok", nOk, deck.length);
+    $("resRec").textContent = prev === undefined ? "—" : prev;
+    $("resRec").classList.toggle("rStrike", prev !== undefined);
+    $("resNew").style.display = newRec ? "" : "none";
+    show("res");
+    resCount(nPts, newRec, prev);
+    if (master) sfx("yes");
+    log("round done: " + nPts + " points" + (newRec ? " (record)" : "") + " · fast " + nFast + " · correct " + nOk +
+        (master ? " · <b>MASTERED</b>" : ""));
+  }
+  // the score counts up from 0; when it passes the old record (a first record: when the count ends) #res gets .rBeat
+  var RES_MS = 1400, RES_WAIT = 300, resTok = 0;
+  var RES_STAR = '<svg viewBox="0 0 100 100"><path d="M50 3 L61 39 L97 50 L61 61 L50 97 L39 61 L3 50 L39 39 Z" fill="currentColor"/></svg>';
+  function resCount(to, newRec, prev) {
+    var tok = ++resTok, el = $("resPts"), t0 = null, done = !newRec;
+    $("res").classList.remove("rBeat");
+    el.textContent = 0;
+    function step(ts) {
+      if (tok !== resTok || current !== "res") return;
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / RES_MS), v = Math.round(to * (1 - Math.pow(1 - p, 3)));
+      el.textContent = v;
+      if (!done && (prev === undefined ? p >= 1 : v > prev)) { done = true; $("res").classList.add("rBeat"); resBurst($("resNowBox")); }
+      if (p < 1) requestAnimationFrame(step);
+    }
+    setTimeout(function () { requestAnimationFrame(step); }, RES_WAIT);
+  }
+  function resBurst(host) {
+    var cols = ["text-warning", "text-primary", "text-accent", "text-secondary"];
+    for (var i = 0; i < 12; i++) {
+      var a = i / 12 * Math.PI * 2 + Math.random() * 0.4, d = 70 + Math.random() * 60, sp = document.createElement("span");
+      sp.className = "rBs " + cols[i % 4];
+      sp.style.setProperty("--dx", Math.cos(a) * d + "px");
+      sp.style.setProperty("--dy", Math.sin(a) * d + "px");
+      sp.style.setProperty("--r", (Math.random() * 540 - 270) + "deg");
+      sp.innerHTML = RES_STAR;
+      sp.addEventListener("animationend", function () { this.remove(); });
+      host.appendChild(sp);
+    }
+  }
+  $("resAgain").onclick = function () { drillStart(); };
+
+  /* ---------- settings: start over ---------- */
+  $("resetGo").onclick = function () { $("resetAsk").showModal(); };
+  $("resetNo").onclick = function () { $("resetAsk").close(); };
+  $("resetYes").onclick = function () {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+    log("start over: save wiped");
+    location.reload();
+  };
+
+  load();
+  $("sndToggle").checked = S.sound;
+  applyTheme();
+  applyLang();
+  renderBest();
+  show("home");
+</script>
+</body>
+</html>
