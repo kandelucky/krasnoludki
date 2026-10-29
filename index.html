@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<title>Krasnoludki</title>
+<title>Przypadki z Bobim</title>
 <link rel="stylesheet" href="lib/daisyui.css">
 <link rel="stylesheet" href="lib/daisyui-themes.css">
 <link rel="stylesheet" href="theme-milioni.css">
@@ -40,14 +40,12 @@
   .pop { display: inline-block; animation: pop .6s ease-out; }
   @keyframes pop { 0% { transform: translateY(10px) scale(.5); opacity: 0; } 40% { transform: translateY(-4px) scale(1.2); opacity: 1; }
                    100% { transform: none; opacity: 1; } }
-  /* a gnome that just appeared (lesson, wrong-answer sheet) pops in */
+  /* something that just appeared pops in (cellPop also pops the wrong-answer sheet's number) */
   .gPop { animation: cellPop .45s cubic-bezier(.3, 1.6, .6, 1) both; }
   @keyframes cellPop { 0% { transform: scale(0); } 70% { transform: scale(1.2); } 100% { transform: scale(1); } }
-  /* the result's seven gnomes when the drill is memorized: they hop, one after the other */
+  /* the result's Sunny & Bobi when the drill is memorized: they hop, one after the other */
   .dance > * { display: inline-block; animation: dance .5s ease-in-out infinite alternate; }
-  .dance > :nth-child(2) { animation-delay: .07s; } .dance > :nth-child(3) { animation-delay: .14s; }
-  .dance > :nth-child(4) { animation-delay: .21s; } .dance > :nth-child(5) { animation-delay: .28s; }
-  .dance > :nth-child(6) { animation-delay: .35s; } .dance > :nth-child(7) { animation-delay: .42s; }
+  .dance > :nth-child(2) { animation-delay: .25s; }
   @keyframes dance { from { transform: translateY(0) rotate(-6deg); } to { transform: translateY(-10px) rotate(6deg); } }
 
   /* result screen (as Ninja 10): „Teraz" | „Rekord"; #res gets .rBeat when the counting score passes the old record */
@@ -73,7 +71,7 @@
   @keyframes recBs { 0% { transform: translate(0, 0) rotate(0) scale(.3); opacity: 1; }
                      100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)) scale(1); opacity: 0; } }
 
-  /* Wrong answer (as Ninja 10): a sheet slides up over the pad; the right gnome pops up on its top edge, half out.
+  /* Wrong answer (as Ninja 10): a sheet slides up over the pad; the right case's number pops up on its top edge, half out.
      Plain base colours — the only red is the small ✕ beside the child's pick. */
   .win { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; display: none; text-align: center;
          padding: 62px 16px 22px; border-radius: 28px 28px 0 0;
@@ -98,13 +96,18 @@
   .rec .ft { display: flex; justify-content: space-between; align-items: center; min-height: 1.6rem; padding: 3px 10px;
              font-size: .78rem; font-weight: 800; background: color-mix(in oklab, var(--color-primary-content) 16%, transparent); }
   .rec .ft .st0 { opacity: .55; font-size: .95rem; line-height: 1; }
-  .rec .ft .dots { display: flex; gap: 3px; margin: 0 auto; }
-  .rec .ft .dots i { width: 7px; height: 7px; border-radius: 50%; }
   .rec.big .nm { padding-top: 18px; }
   .rec.big .ft { font-size: 1rem; padding: 5px 14px; }
-  /* the sea sentence (home, table, drills — not the exam): each word's first letter in its gnome's colour */
+  /* the sea sentence (home, table, drills — not the exam): each word's first letter in its case's colour */
   .sent { font-weight: 700; line-height: 1.45; }
   .sent b { font-weight: 900; font-size: 1.3em; }
+  /* a chapter's word (② Po kolei): painted whole in its case's colour and underlined */
+  .sent .cur { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 3px; }
+  /* Sprawdź: the sentence with its gap; a right tap puts the word into the gap (.ok, in the case's colour) */
+  #dQ.sq { font-size: 2rem; line-height: 1.35; }
+  .gap { display: inline-block; min-width: 118px; height: 1em; margin: 0 4px;
+         border-bottom: 4px dashed color-mix(in oklab, var(--color-base-content) 50%, transparent); }
+  .gap.ok { min-width: 0; height: auto; border-bottom: 4px solid currentColor; }
 
   /* ---------- „dojo" (Ninja 10's kid theme): the starry sky behind every screen and the chunky pastel buttons, one hue
      per button (--h, set on the button). The theme's colours are in theme-milioni.css. Only this theme. ---------- */
@@ -131,41 +134,45 @@
     --btn-shadow: 0 1px 0 oklch(calc(var(--L) - .13) var(--C) var(--h)), 0 3px 6px rgb(0 0 0 / .2);
   }
   [data-theme=dojo] #app .btn.rec.big { --L: .86; --C: .09; }
+  /* the seven chapter tiles (.calm, home mock „A · spokojne kafelki"): one dark tile colour for all seven, only the
+     badge keeps the case's colour */
+  [data-theme=dojo] #app .btn.rec.calm { --btn-color: #3a3479; --btn-fg: #f1eeff;
+    --btn-shadow: 0 4px 0 #1b1846, 0 7px 12px rgb(0 0 0 / .22); margin-bottom: 4px; }
+  [data-theme=dojo] #app .btn.rec.calm:active { --btn-bg: #3a3479; --btn-shadow: 0 1px 0 #1b1846; }
   [data-theme=dojo] #home h1 { font-weight: 900; text-shadow: 0 4px 0 rgb(0 0 0 / .28); }
 </style>
 </head>
 <body class="h-full m-0 bg-base-100 text-base-content">
   <main id="app" class="h-full max-w-3xl mx-auto">
 
-    <!-- home = topic 1's menu (the only topic so far). Everything is open from the start (Lasha picked „B"):
-         ① Wszystkie razem — the table, Kolejność, Pytania i nazwy · ② Po kolei — the seven chapters · ③ the exam -->
+    <!-- home = topic 1's menu (the only topic so far). Everything is open from the start (Lasha picked „B").
+         Home mock „A · spokojne kafelki": top to bottom the way a child learns — the seven chapters one by one ·
+         Kolejność and Pytania i nazwy (all seven together) · the exam at the bottom. No section labels.
+         The table is 📋 top left, mirroring ⚙️ (beside ⚙️ it would touch the picture) -->
     <section id="home" class="h-full flex-col p-5 pt-3 gap-3 overflow-y-auto">
-      <div class="flex justify-end">
+      <div class="flex justify-between">
+        <button id="goTab" class="btn btn-ghost btn-circle text-2xl" data-ta="m_tab">📋</button>
         <button id="toSet" class="btn btn-ghost btn-circle text-2xl">⚙️</button>
       </div>
-      <div class="flex flex-col items-center gap-2 -mt-6">
-        <div id="homeG" class="flex justify-center gap-1"></div>
-        <h1 class="text-4xl font-bold text-primary mt-1" data-t="title"></h1>
-        <p class="text-lg opacity-70 -mt-1" data-t="home_sub"></p>
-        <p id="homeS" class="sent flex flex-wrap justify-center gap-x-2 text-xl text-center"></p>
+      <!-- Sunny & Bobi, up between 📋 and ⚙️ (-mt-12) so home does not scroll -->
+      <div class="flex flex-col items-center gap-1 -mt-12">
+        <div id="homeG" class="flex justify-center"></div>
+        <h1 class="text-3xl font-black text-primary" data-t="title"></h1>
+        <p id="homeS" class="sent flex flex-wrap justify-center gap-x-1.5 text-lg text-center"></p>
       </div>
-      <p class="font-extrabold opacity-80 -mb-1 mt-1">① <span data-t="home_all"></span></p>
-      <div class="grid grid-cols-3 gap-2">
-        <button id="goTab" class="btn btn-primary rec h-auto min-h-16" style="--h:155">
-          <span class="nm text-lg leading-tight" data-t="m_tab"></span><span class="ft"><span id="ftTab" class="dots"></span></span></button>
+      <div id="homeCh" class="grid grid-cols-2 gap-x-2 gap-y-1.5"></div>
+      <div class="grid grid-cols-2 gap-2">
         <button class="btn btn-primary rec h-auto min-h-16" data-m="kol" style="--h:250">
           <span class="nm text-lg leading-tight" data-t="m_kol"></span><span class="ft" id="ft_kol"></span></button>
         <button class="btn btn-primary rec h-auto min-h-16" data-m="pn" style="--h:65">
           <span class="nm text-lg leading-tight" data-t="m_pn"></span><span class="ft" id="ft_pn"></span></button>
       </div>
-      <p class="font-extrabold opacity-80 -mb-1 mt-1">② <span data-t="home_one"></span></p>
-      <div id="homeCh" class="grid grid-cols-2 gap-2"></div>
-      <button class="btn btn-primary rec big h-auto min-h-20 shrink-0 mt-1" data-m="egz" style="--h:85">
-        <span class="nm text-2xl">③&nbsp;<span data-t="m_egz"></span></span><span class="ft" id="ft_egz"></span></button>
+      <button class="btn btn-primary rec big h-auto min-h-16 shrink-0 mt-auto" data-m="egz" style="--h:85">
+        <span class="nm text-2xl" data-t="m_egz"></span><span class="ft" id="ft_egz"></span></button>
     </section>
 
-    <!-- the table, as the textbook's p. 73 „PRZYPADKI RZECZOWNIKA": the seven gnomes top to bottom, each with
-         number + name, its questions, its helper words and the examples -->
+    <!-- the table, as the textbook's p. 73 „PRZYPADKI RZECZOWNIKA": the seven cases top to bottom, each with
+         its badge + name, its questions, its helper words and the examples -->
     <section id="tab" class="h-full flex-col p-5 gap-3">
       <div class="flex items-center gap-2">
         <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
@@ -176,8 +183,29 @@
       <button class="btn btn-primary btn-lg btn-block shrink-0 quit" data-t="btn_back"></button>
     </section>
 
-    <!-- drill: 10 cards (the exam 15; Kolejność 7 steps), a 5-second bar, seven answer buttons. The sea sentence on top,
-         except in the exam. Kolejność: the seven names mixed up, tapped from 1 to 7 into the slots (#dO) -->
+    <!-- ② one chapter of „7 przygód Sunny i Bobiego" (Lasha picked mock „B · one screen"): the chapter's picture (Sunny
+         & Bobi, picture mock „B · no frame"), the headline with the case's form in its colour, what happens, the rule,
+         this case's p. 73 row, „Zapamiętaj" → „Sprawdź!" = 5 cards -->
+    <section id="ch" class="h-full flex-col p-5 gap-3 overflow-y-auto">
+      <div class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
+        <span id="chG" class="flex"></span>
+        <h2 id="chN" class="text-2xl font-black"></h2>
+      </div>
+      <div id="chS" class="sent flex flex-wrap justify-center gap-x-2 text-lg text-center"></div>
+      <div class="flex-1 flex flex-col justify-center gap-3">
+        <div id="chP" class="shrink-0"></div>
+        <p id="chH" class="text-2xl font-black text-center leading-tight"></p>
+        <div id="chT" class="flex flex-col gap-2 leading-snug opacity-90"></div>
+        <div id="chR"></div>
+        <div id="chZ" class="bg-base-200 rounded-box px-4 py-2.5 border-l-[6px]"></div>
+      </div>
+      <button id="chGo" class="btn btn-primary btn-lg btn-block shrink-0" data-t="btn_check"></button>
+    </section>
+
+    <!-- drill: 10 cards (the exam 15; Kolejność 7 steps; a chapter's Sprawdź 5), a 5-second bar, the answer buttons. The
+         sea sentence on top, except in the exam. Kolejność: the seven names mixed up, tapped from 1 to 7 into the slots
+         (#dO). Sprawdź: a sentence with a gap, the right form + two wrong ones under it -->
     <section id="drill" class="h-full flex-col p-5 gap-3 relative overflow-hidden">
       <div class="flex justify-between items-center">
         <button id="dPause" class="btn btn-ghost btn-sm text-xl">✕</button>
@@ -194,13 +222,15 @@
         <div id="dFb" class="text-2xl h-8 leading-8"></div>
       </div>
       <div id="pad" class="grid grid-cols-2 gap-2"></div>
-      <!-- wrong answer: the child's pick with a small ✕, then the right gnome with its name, question and helper -->
+      <!-- wrong answer: the child's pick with a small ✕, then the right case's badge with its name, question and helper -->
       <div id="dWin" class="win">
         <div id="dWg" class="wg"></div>
         <p id="dWp" class="text-base opacity-70 mb-2"></p>
         <p id="dWn" class="text-3xl font-black"></p>
         <p id="dWq" class="text-3xl font-bold mt-1"></p>
-        <p id="dWh" class="text-lg opacity-70 mb-5"></p>
+        <p id="dWh" class="text-lg opacity-70 mb-3"></p>
+        <!-- the case's „Zapamiętaj" words, as on its chapter screen (Lasha: every mistake shows the words to remember) -->
+        <div id="dWz" class="bg-base-100 rounded-box px-4 py-2.5 border-l-[6px] text-left mb-5"></div>
         <button id="dNext" class="btn btn-primary btn-lg btn-block" data-t="btn_next"></button>
       </div>
     </section>
@@ -292,10 +322,8 @@
   /* ---------- strings: every string the child can read lives here. Polish only, as Ninja 10. ---------- */
   var PACK = {
     pl: {
-      title: "Krasnoludki",
+      title: "Przypadki z Bobim",
       home_sub: "Przypadki rzeczownika",
-      home_all: "Wszystkie razem",
-      home_one: "Po kolei",
       m_tab: "Tabela",
       m_kol: "Kolejność",
       m_pn: "Pytania i nazwy",
@@ -304,6 +332,9 @@
       q_naz: "Który to przypadek?",
       q_num: "Który to numer?",
       q_ord: "Ułóż od 1 do 7!",
+      q_spr: "Wstaw brakujące słowo!",
+      btn_check: "Sprawdź!",
+      zap: "Zapamiętaj:",
       see_ex: "np.",
       // the textbook's sea sentence (p. 74): one word per case, its first letter = the case's first letter.
       // Shown on home, the table and every drill except the exam
@@ -334,7 +365,7 @@
       exit_yes: "Tak, zamknij",
       exit_no: "Nie",
       // the seven cases exactly as the textbook's table (p. 73): name, questions, helper words, examples
-      // (babcia singular, koszyki plural). ab = the short name from p. 84 · h = the gnome's hat hue (oklch), red → pink
+      // (babcia singular, koszyki plural). ab = the short name from p. 84 · h = the case's hue (oklch), red → pink
       cases: [
         { ab: "M.",  name: "Mianownik",   q: "Kto? Co?",       help: "(jest, są)",        ex: "babcia, koszyki",            h: 25 },
         { ab: "D.",  name: "Dopełniacz",  q: "Kogo? Czego?",   help: "(nie ma)",          ex: "babci, koszyków",            h: 60 },
@@ -344,6 +375,55 @@
         { ab: "Ms.", name: "Miejscownik", q: "O kim? O czym?", help: "(mówię)",           ex: "(o) babci, (o) koszykach",   h: 300 },
         { ab: "W.",  name: "Wołacz",      q: "O!",
           help: "(mój drogi, moja droga, moi drodzy, moje drogie)",                       ex: "babciu, koszyki",            h: 345 }
+      ],
+      // ② the seven chapters = Lasha's story „7 przygód Sunny i Bobiego", one per case (questions: the textbook's only).
+      // head = [before, the case's form, after] · sit = what happens · rule · zap = „Zapamiętaj" lines.
+      // spr = Sprawdź's 5 cards: [sentence, _ = the gap, the right form, two wrong forms of the same word] — words only
+      // from the table and the story; no wrong form may also be right there (no „To jest Bobiego" = Bobi's).
+      // Lasha checked the 35 in the mock („მომწონს რაც არის")
+      chapters: [
+        { head: ["To jest ", "Bobi", "."], sit: "",
+          rule: "Kiedy przedstawiamy kogoś albo mówimy, kto coś robi, używamy mianownika.",
+          zap: ["Poznajemy bohatera!"],
+          spr: [["To jest _.", "Bobi", "Bobiemu", "Bobim"], ["_ piecze ciasto.", "Babcia", "Babcię", "Babci"],
+                ["Tu są _.", "koszyki", "koszykom", "koszykami"], ["_ szczeka.", "Bobi", "Bobiego", "Bobiemu"],
+                ["Tu jest _.", "mama", "mamę", "mamie"]] },
+        { head: ["Nie ma ", "Bobiego", "!"], sit: "Sunny szuka psa. Bobiego nigdzie nie ma!",
+          rule: "Dopełniacz często pojawia się, gdy czegoś nie ma, czegoś potrzebujemy albo mówimy o czymś, czego brakuje.",
+          zap: ["Nie ma…!"],
+          spr: [["Nie ma _!", "Bobiego", "Bobi", "Bobim"], ["Nie ma _.", "babci", "babcię", "babcią"],
+                ["Nie ma tu _.", "koszyków", "koszyki", "koszykami"], ["Sunny szuka _.", "psa", "pies", "psem"],
+                ["Nie ma _.", "mamy", "mamę", "mamą"]] },
+        { head: ["Sunny daje ", "Bobiemu", " smaczek."], sit: "Sunny ma smaczek. Bobi go dostaje.",
+          rule: "Celownik pokazuje, komu coś dajemy, komu pomagamy lub komu coś przynosimy.",
+          zap: ["Ktoś coś dostaje!"],
+          spr: [["Sunny daje _ smaczek.", "Bobiemu", "Bobiego", "Bobim"], ["Przyglądam się _.", "babci", "babcię", "babcią"],
+                ["Przyglądam się _.", "koszykom", "koszyki", "koszykach"], ["Pomagam _.", "mamie", "mamę", "mamą"],
+                ["Daję _ prezent.", "tacie", "tatę", "tatą"]] },
+        { head: ["Sunny widzi ", "Bobiego", "."], sit: "Sunny patrzy na psa. To Bobi jest tym, kogo widzi.",
+          rule: "Biernik często wskazuje osobę lub rzecz, na którą skierowana jest czynność.",
+          zap: ["Widzę kogoś lub coś!"],
+          spr: [["Sunny widzi _.", "Bobiego", "Bobi", "Bobiemu"], ["Widzę _.", "babcię", "babcia", "babci"],
+                ["Widzę _.", "koszyki", "koszyków", "koszykach"], ["Kocham _.", "mamę", "mama", "mamie"],
+                ["Mam _.", "psa", "pies", "psu"]] },
+        { head: ["Sunny idzie ", "z Bobim", "."], sit: "Sunny nie idzie sama. Towarzyszy jej Bobi.",
+          rule: "Narzędnik często mówi, z kim coś robimy albo czym się posługujemy.",
+          zap: ["Razem z kimś albo za pomocą czegoś!"],
+          spr: [["Sunny idzie z _.", "Bobim", "Bobi", "Bobiemu"], ["Idę z _.", "babcią", "babcię", "babcia"],
+                ["Idę z _.", "koszykami", "koszykom", "koszykach"], ["Rozmawiam z _.", "tatą", "tatę", "tacie"],
+                ["Bawię się z _.", "kolegą", "kolegę", "koledze"]] },
+        { head: ["Sunny myśli ", "o Bobim", "."], sit: "Sunny myśli o swoim psie. Bobi jest tematem jej myśli.",
+          rule: "Miejscownik występuje zwykle po określonych słowach, np. o, w, na, przy.",
+          zap: ["Myślę o kimś albo mówię o czymś!"],
+          spr: [["Sunny myśli o _.", "Bobim", "Bobiego", "Bobi"], ["Mówię o _.", "babci", "babcię", "babcią"],
+                ["Mówię o _.", "koszykach", "koszyki", "koszykami"], ["Myślę o _.", "mamie", "mamę", "mamą"],
+                ["Sunny myśli o swoim _.", "psie", "psa", "psem"]] },
+        { head: ["", "Bobi", "! Chodź tutaj!"], sit: "Bobi pobiegł za daleko. Sunny woła swojego psa.",
+          rule: "Wołacza używamy, gdy zwracamy się bezpośrednio do kogoś lub czegoś.",
+          zap: ["Wołamy!", "Bobi! Mamo! Tato! Kolego!"],
+          spr: [["_! Chodź tutaj!", "Bobi", "Bobiego", "Bobim"], ["_, chodź tutaj!", "Babciu", "Babcię", "Babcią"],
+                ["_, pomóż mi!", "Mamo", "Mamę", "Mamą"], ["_, zobacz!", "Tato", "Tatę", "Tacie"],
+                ["Cześć, _!", "kolego", "kolegę", "kolegą"]] }
       ]
     }
   };
@@ -354,9 +434,13 @@
   // a round's size and its „memorized" line: 8 of 10 fast and right (as Ninja 10); the exam 12 of 15 (the same 80 %);
   // Kolejność = the seven in order, every step right the first time and fast
   var MODES = { kol: { n: 7, m: 7 }, pn: { n: 10, m: 8 }, egz: { n: 15, m: 12 } };
+  // a chapter's Sprawdź („ch0" … „ch6", saved under that key): its 5 sentences, memorized at 4 of 5 fast and right
+  var CH_MODE = { n: 5, m: 4 };
+  function chOf(m) { return /^ch\d$/.test(m) ? +m.slice(2) : -1; }
   // Points for a right answer: 100 at once, down to 20 at FAST_MS, never below 20. Wrong = 0.
   var PTS_MAX = 100, PTS_MIN = 20;
   function points(ms) { return Math.max(PTS_MIN, Math.round(PTS_MAX - (PTS_MAX - PTS_MIN) * ms / FAST_MS)); }
+  // „krasnoludki" = the app's old name, kept: the saved stars stay
   var SAVE_KEY = "krasnoludki_v2";   // a change to the saved shape needs a migration in load() · gitleaks:allow (a storage key, no secret)
 
   /* ---------- state + save ---------- */
@@ -385,6 +469,10 @@
   function applyLang() {
     document.documentElement.lang = S.lang;
     Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function (el) { el.textContent = t(el.dataset.t); });
+    // an icon button (home's 📋) carries its name only for screen readers
+    Array.prototype.forEach.call(document.querySelectorAll("[data-ta]"), function (el) {
+      el.setAttribute("aria-label", t(el.dataset.ta));
+    });
   }
 
   /* ---------- theme ---------- */
@@ -485,54 +573,183 @@
     S.sound = $("sndToggle").checked; save(); sfx("click"); log("sound → " + (S.sound ? "on" : "off"));
   };
 
-  /* ---------- the gnome (own drawing, sticker style as Ninja 10's ninja: dark outline) ----------
-     gnomeSvg(i, w): case i's gnome, w px wide. The hat wears the case's hue; a few carry the textbook's hint:
-     D (nie ma) is faded — it is not there · C (się przyglądam) big eyes · B (widzę) binoculars · Ms (mówię)
-     speech lines · W (o!) waves */
+  /* ---------- the case's badge: its number in a circle of its hue, an ink ring as the drawings (Lasha picked
+     mock „ა", session 4: the gnomes went — in the book they had faces, here only colours) ----------
+     badgeSvg(i, px): case i's badge, px wide — the ② tiles 24 · the chapter's top bar 30 · a p. 73 row 42 ·
+     the wrong-answer sheet 72. Beside a badge the name goes without „n.": the badge carries the number */
   var INK = "#1d1b2e", SKIN = "#ffd9b8";
   function hatCol(h) { return "oklch(.7 .16 " + h + ")"; }
   function textCol(h) { return "oklch(.72 .15 " + h + ")"; }
-  var BEARD = [[35, 61, 8], [39, 71, 9], [50, 76, 10], [61, 71, 9], [65, 61, 8], [50, 66, 10]];
-  function gnomeSvg(i, w) {
-    var h = CASES[i].h, o = ' stroke="' + INK + '" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"';
-    function beard(extra) {
-      return BEARD.map(function (b) { return '<circle cx="' + b[0] + '" cy="' + b[1] + '" r="' + b[2] + '"' + extra + "/>"; }).join("");
+  function badgeSvg(i, px) {
+    return '<svg viewBox="0 0 40 40" width="' + px + '" height="' + px + '" aria-hidden="true" class="shrink-0">' +
+           '<circle cx="20" cy="20" r="17.5" fill="' + hatCol(CASES[i].h) + '" stroke="' + INK + '" stroke-width="3"/>' +
+           '<text x="20" y="21.5" text-anchor="middle" dominant-baseline="central" font-size="23" font-weight="900" fill="' +
+           INK + '">' + (i + 1) + "</text></svg>";
+  }
+  /* ---------- ② the chapters' pictures: Sunny & Bobi (own drawing, Lasha picked variant A = an ink line, sticker style;
+     Bobi = the family's border collie). Each chapter = one scene with its detail, 320 × 96, on a ground line
+     (picture mock „B · no frame"). Some details carry the textbook gnome's hint: D faded (Bobi only a dashed outline) ·
+     C big eyes · B binoculars ---------- */
+  var CHEEK = "#ff9eb0", RED = "#e63946", GOLD = "#ffd166", SUN = "#ff9f1c", TONGUE = "#ff7aa2";
+  function lineAt(w) { return ' stroke="' + INK + '" stroke-width="' + w + '" stroke-linejoin="round" stroke-linecap="round"'; }
+  function rays(cx, cy, r1, r2, col, sw) {
+    var s = "";
+    for (var k = 0; k < 8; k++) {
+      var c = Math.cos(k * Math.PI / 4), d = Math.sin(k * Math.PI / 4);
+      s += '<path d="M' + (cx + r1 * c).toFixed(1) + " " + (cy + r1 * d).toFixed(1) + " L" + (cx + r2 * c).toFixed(1) + " " +
+           (cy + r2 * d).toFixed(1) + '" stroke="' + col + '" stroke-width="' + sw + '" stroke-linecap="round"/>';
     }
-    var s = '<svg viewBox="0 0 100 124" width="' + w + '" height="' + Math.round(w * 1.24) + '"' +
-            (i === 1 ? ' opacity=".35"' : "") + ' aria-hidden="true">';
-    s += '<ellipse cx="39" cy="116" rx="8" ry="4.5" fill="' + INK + '"/><ellipse cx="61" cy="116" rx="8" ry="4.5" fill="' + INK + '"/>';
-    if (i === 3) {         // both hands up to the binoculars, behind the beard
-      s += '<path d="M32 80 L38 56 M68 80 L62 56" fill="none"' + o + "/>";
+    return s;
+  }
+  // a smaczek: a small bone, outline pass first, then the fill on top, so the shapes merge
+  function bone(x, y) {
+    var b = '<rect x="-6" y="-2" width="12" height="4"/>' + [[-6, -2.4], [-6, 2.4], [6, -2.4], [6, 2.4]].map(function (p) {
+      return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="2.8"/>';
+    }).join("");
+    return '<g transform="translate(' + x + " " + y + ') rotate(-20) scale(1.3)"><g fill="#f6e7c8" stroke="' + INK +
+           '" stroke-width="4" stroke-linejoin="round">' + b + '</g><g fill="#f6e7c8">' + b + "</g></g>";
+  }
+  // Sunny in a 100 × 124 box. o.arms: down · point (at Bobi) · give (the smaczek) · leash · bino (binoculars) ·
+  // call (both hands at the open mouth). o.mouth: o = worried (chapter 2), else a smile
+  function sunnySvg(o) {
+    var a = o.arms || "down", ol = lineAt(3), H = "#7b4a2b", s = "";
+    s += '<ellipse cx="41" cy="116" rx="7" ry="4.5" fill="' + INK + '"/><ellipse cx="59" cy="116" rx="7" ry="4.5" fill="' + INK + '"/>';
+    s += '<path d="M43 102 L42 112 M57 102 L58 112" fill="none"' + ol + "/>";
+    s += '<ellipse cx="27" cy="58" rx="6.5" ry="11" transform="rotate(18 27 58)" fill="' + H + '"' + ol + "/>";
+    s += '<ellipse cx="73" cy="58" rx="6.5" ry="11" transform="rotate(-18 73 58)" fill="' + H + '"' + ol + "/>";
+    if (a === "bino" || a === "call") {          // both hands up to the face: the arms here, the hands after the head
+      s += '<path d="M38 76 L' + (a === "bino" ? "41 60" : "39 66") + " M62 76 L" + (a === "bino" ? "59 60" : "61 66") +
+           '" fill="none"' + ol + "/>";
     } else {
-      s += '<path d="M32 82 L20 95" fill="none"' + o + '/><circle cx="19" cy="97" r="4" fill="' + SKIN + '"' + o + "/>";
-      s += i === 6 ? '<path d="M68 80 L82 62" fill="none"' + o + '/><circle cx="84" cy="59" r="4.5" fill="' + SKIN + '"' + o + "/>"
-                   : '<path d="M68 82 L80 95" fill="none"' + o + '/><circle cx="81" cy="97" r="4" fill="' + SKIN + '"' + o + "/>";
+      s += '<path d="M38 76 L27 92" fill="none"' + ol + '/><circle cx="26" cy="94" r="4" fill="' + SKIN + '"' + ol + "/>";
+      var R = { down: ["73 92", 74, 94], point: ["84 69", 86, 68], give: ["84 73", 86, 72], leash: ["76 90", 77, 92] }[a];
+      s += '<path d="M62 76 L' + R[0] + '" fill="none"' + ol + '/><circle cx="' + R[1] + '" cy="' + R[2] + '" r="4" fill="' + SKIN + '"' + ol + "/>";
+      if (a === "point") s += '<path d="M89.5 66.8 L95 64.8" fill="none"' + ol + "/>";
+      if (a === "give") s += bone(90, 66);
     }
-    s += '<path d="M35 74 L65 74 L76 112 L24 112 Z" fill="oklch(.84 .05 ' + h + ')"' + o + "/>";
-    s += '<circle cx="50" cy="51" r="17" fill="' + SKIN + '"' + o + "/>";
-    // the beard: an outline pass, then the white on top, so the circles merge into one cloud
-    s += '<g fill="#fff" stroke="' + INK + '" stroke-width="6">' + beard("") + '</g><g fill="#fff">' + beard("") + "</g>";
-    if (i === 2) {
-      s += '<circle cx="42" cy="49" r="5.5" fill="#fff"' + o + '/><circle cx="58" cy="49" r="5.5" fill="#fff"' + o + "/>" +
-           '<circle cx="43" cy="50" r="2.4" fill="' + INK + '"/><circle cx="57" cy="50" r="2.4" fill="' + INK + '"/>';
-    } else if (i !== 3) {
-      s += '<ellipse cx="43" cy="50" rx="2.6" ry="3.3" fill="' + INK + '"/><ellipse cx="57" cy="50" rx="2.6" ry="3.3" fill="' + INK + '"/>';
+    s += '<path d="M37 70 L63 70 L72 104 L28 104 Z" fill="' + GOLD + '"' + ol + "/>";
+    s += '<circle cx="50" cy="88" r="5" fill="' + SUN + '"/>' + rays(50, 88, 7.5, 10, SUN, 2);
+    s += '<circle cx="50" cy="48" r="19" fill="' + SKIN + '"' + ol + "/>";
+    s += '<path d="M31 49 C29 30 40 26 50 26 C60 26 71 30 69 49 C67 42 64 38 59 37 C56 41 49 42 45 38 C40 38 34 42 31 49 Z" fill="' + H + '"' + ol + "/>";
+    s += '<circle cx="31.5" cy="47" r="3.2" fill="#ff5d8f"' + lineAt(2) + '/><circle cx="68.5" cy="47" r="3.2" fill="#ff5d8f"' + lineAt(2) + "/>";
+    if (a !== "bino") {
+      s += '<ellipse cx="43" cy="52" rx="2.6" ry="3.3" fill="' + INK + '"/><ellipse cx="57" cy="52" rx="2.6" ry="3.3" fill="' + INK + '"/>';
     }
-    s += '<circle cx="50" cy="57" r="5.5" fill="#ff9eb0"' + o + "/>";
-    if (i === 5) s += '<path d="M78 50 q5 6 0 12 M85 45 q8 11 0 22" fill="none" stroke="' + INK + '" stroke-width="3" stroke-linecap="round"/>';
-    s += '<path d="M29 42 Q40 23 53 3 Q60 23 71 42 Q50 47 29 42 Z" fill="' + hatCol(h) + '"' + o + "/>";
-    if (i === 3) {
-      s += '<rect x="45" y="45" width="10" height="5" rx="2" fill="#6b7394"' + o + "/>" +
-           '<circle cx="41" cy="48" r="7" fill="#6b7394"' + o + '/><circle cx="59" cy="48" r="7" fill="#6b7394"' + o + "/>" +
-           '<circle cx="41" cy="48" r="3.2" fill="#cfe3ff"/><circle cx="59" cy="48" r="3.2" fill="#cfe3ff"/>';
+    // (no cheek circles: Lasha, session 4 — they read as a beard)
+    if (a === "call") s += '<ellipse cx="50" cy="61" rx="4" ry="4.8" fill="' + INK + '"/><ellipse cx="50" cy="63.4" rx="2.2" ry="1.6" fill="' + TONGUE + '"/>';
+    else if (o.mouth === "o") s += '<ellipse cx="50" cy="60" rx="2" ry="2.4" fill="' + INK + '"/>';
+    else s += '<path d="M45 58.5 Q50 63 55 58.5" fill="none"' + lineAt(2.5) + "/>";
+    if (a === "call") {                          // two cupped hands, tilted, at the sides of the open mouth
+      s += '<ellipse cx="40" cy="62" rx="4.4" ry="6.6" transform="rotate(-28 40 62)" fill="' + SKIN + '"' + ol + "/>" +
+           '<ellipse cx="60" cy="62" rx="4.4" ry="6.6" transform="rotate(28 60 62)" fill="' + SKIN + '"' + ol + "/>";
     }
-    return s + "</svg>";
+    if (a === "bino") {                          // the binoculars over the eyes, as the textbook's Biernik gnome
+      s += '<rect x="45" y="49" width="10" height="5" rx="2" fill="#6b7394"' + ol + "/>" +
+           '<circle cx="42" cy="52" r="7" fill="#6b7394"' + ol + '/><circle cx="58" cy="52" r="7" fill="#6b7394"' + ol + "/>" +
+           '<circle cx="42" cy="52" r="3.2" fill="#cfe3ff"/><circle cx="58" cy="52" r="3.2" fill="#cfe3ff"/>' +
+           '<circle cx="40" cy="60" r="4" fill="' + SKIN + '"' + ol + '/><circle cx="60" cy="60" r="4" fill="' + SKIN + '"' + ol + "/>";
+    }
+    return s;
   }
-  function dotsHtml() {
-    return CASES.map(function (c) { return '<i style="background:' + hatCol(c.h) + '"></i>'; }).join("");
+  // Bobi in a 100 × 124 box, sitting. o.eyes: big = the textbook's Celownik gnome's big eyes, looking left at the smaczek
+  function bobiSvg(o) {
+    var ol = lineAt(3), F = "#3a3650", s = "";
+    s += '<path d="M62 104 C78 106 88 96 87 82 C86 76 80 76 80 82 C80 92 74 97 62 97 Z" fill="' + F + '"' + ol + "/>";
+    s += '<ellipse cx="83.5" cy="80.5" rx="3.8" ry="4" fill="#fff"' + ol + "/>";
+    s += '<ellipse cx="35" cy="104" rx="10" ry="9" fill="' + F + '"' + ol + '/><ellipse cx="65" cy="104" rx="10" ry="9" fill="' + F + '"' + ol + "/>";
+    s += '<path d="M36 110 C30 90 36 62 50 60 C64 62 70 90 64 110 Z" fill="' + F + '"' + ol + "/>";
+    s += '<path d="M41 66 C42 84 45 98 50 104 C55 98 58 84 59 66 C55 70 45 70 41 66 Z" fill="#fff"/>';
+    s += '<rect x="39" y="92" width="9" height="22" rx="4.5" fill="#fff"' + ol + '/><rect x="52" y="92" width="9" height="22" rx="4.5" fill="#fff"' + ol + "/>";
+    s += '<path d="M32 40 C27 30 26 20 29 14 C35 17 41 24 44 31 Z" fill="' + F + '"' + ol + "/>";
+    s += '<path d="M68 40 C73 30 74 20 71 14 C65 17 59 24 56 31 Z" fill="' + F + '"' + ol + "/>";
+    s += '<path d="M33 33 C31 27 31 22 32 19 C35 22 38 26 40 30 Z" fill="' + CHEEK + '" opacity=".55"/>';
+    s += '<path d="M67 33 C69 27 69 22 68 19 C65 22 62 26 60 30 Z" fill="' + CHEEK + '" opacity=".55"/>';
+    s += '<ellipse cx="50" cy="46" rx="21" ry="18.5" fill="' + F + '"' + ol + "/>";
+    s += '<path d="M47.5 30.5 C48 36 46 41 41 47 L59 47 C54 41 52 36 52.5 30.5 Q50 29.5 47.5 30.5 Z" fill="#fff"/>';
+    s += '<ellipse cx="50" cy="54" rx="12" ry="8.5" fill="#fff"/>';
+    [40, 60].forEach(function (x) {
+      if (o.eyes === "big") {
+        s += '<circle cx="' + x + '" cy="41" r="6.4" fill="#fff"' + lineAt(2) + '/><circle cx="' + (x - 1.4) + '" cy="42" r="3.6" fill="' + INK + '"/>' +
+             '<circle cx="' + (x - .3) + '" cy="40.4" r="1.3" fill="#fff"/>';
+      } else {
+        var p = x < 50 ? .5 : -.5;
+        s += '<circle cx="' + x + '" cy="41" r="4.6" fill="#fff"/><circle cx="' + (x + p) + '" cy="41.5" r="2.9" fill="' + INK + '"/>' +
+             '<circle cx="' + (x + p + 1.1) + '" cy="40.3" r="1.1" fill="#fff"/>';
+      }
+    });
+    s += '<path d="M45.5 50 Q50 47.5 54.5 50 Q53 54 50 54.5 Q47 54 45.5 50 Z" fill="' + INK + '"/>';
+    s += '<path d="M50 54.5 L50 57 M45 57.5 Q47.5 60 50 57 Q52.5 60 55 57.5" fill="none"' + lineAt(2) + "/>";
+    s += '<path d="M48 59 Q50 64.5 52 59 Z" fill="' + TONGUE + '"' + lineAt(1.5) + "/>";
+    s += '<path d="M35 62 Q50 71 65 62" fill="none" stroke="' + RED + '" stroke-width="5" stroke-linecap="round"/>';
+    s += '<circle cx="50" cy="70" r="3.2" fill="' + GOLD + '"' + lineAt(2) + "/>";
+    return s;
   }
-  // the sea sentence, word i = case i, its first letter in the gnome's colour. cur = the word to light (the lesson's
-  // gnome, painted whole in its colour); -1 = none (home)
+  // chapter 2: Bobi is not there — only the dashed outline of his whole shape. The strokes are drawn twice as thick
+  // and masked by the shape itself, so only the outer half shows and no inner line (legs, paws) is left
+  function bobiGhost() {
+    var sh = '<path d="M62 104 C78 106 88 96 87 82 C86 76 80 76 80 82 C80 92 74 97 62 97 Z"/><ellipse cx="83.5" cy="80.5" rx="3.8" ry="4"/>' +
+      '<ellipse cx="35" cy="104" rx="10" ry="9"/><ellipse cx="65" cy="104" rx="10" ry="9"/>' +
+      '<path d="M36 110 C30 90 36 62 50 60 C64 62 70 90 64 110 Z"/>' +
+      '<rect x="39" y="92" width="9" height="22" rx="4.5"/><rect x="52" y="92" width="9" height="22" rx="4.5"/>' +
+      '<path d="M32 40 C27 30 26 20 29 14 C35 17 41 24 44 31 Z"/><path d="M68 40 C73 30 74 20 71 14 C65 17 59 24 56 31 Z"/>' +
+      '<ellipse cx="50" cy="46" rx="21" ry="18.5"/>';
+    return '<mask id="bobiGone" maskUnits="userSpaceOnUse" x="-20" y="-20" width="140" height="160">' +
+           '<rect x="-20" y="-20" width="140" height="160" fill="#fff"/><g fill="#000">' + sh + "</g></mask>" +
+           '<g mask="url(#bobiGone)" fill="none" stroke="currentColor" stroke-opacity=".55" stroke-width="6" stroke-dasharray="6 5" ' +
+           'stroke-linejoin="round">' + sh + "</g>";
+  }
+  // everyone's feet on the ground line PIC_GY: a figure's box drawn at x, scale s, its feet at `bottom` in the box
+  var PIC_GY = 90;
+  function picPut(inner, x, s, bottom) {
+    return '<g transform="translate(' + x + " " + (PIC_GY - bottom * s).toFixed(2) + ") scale(" + s + ')">' + inner + "</g>";
+  }
+  function sunnyAt(o) { return picPut(sunnySvg(o), o.x, .7, 120.5); }
+  function bobiAt(o) { return picPut(bobiSvg(o), o.x, o.s || .62, 114); }
+  // the seven scenes, one per case; col = the case's text colour (the „?", the call's sound arcs)
+  var PIC_SCENES = [
+    function () { return sunnyAt({ x: 85, arms: "point" }) + bobiAt({ x: 160 }); },
+    function (col) {
+      return sunnyAt({ x: 85, mouth: "o" }) + picPut(bobiGhost(), 160, .62, 114) +
+             '<text x="136" y="30" font-size="26" font-weight="900" fill="' + col + '">?</text>';
+    },
+    function () { return bobiAt({ x: 158, eyes: "big" }) + sunnyAt({ x: 85, arms: "give" }); },
+    function () { return sunnyAt({ x: 62, arms: "bino" }) + bobiAt({ x: 212, s: .42 }); },
+    function () {
+      return sunnyAt({ x: 85, arms: "leash" }) + bobiAt({ x: 160 }) +
+             '<path d="M139 70 Q166 88 191 64" fill="none" stroke="' + RED + '" stroke-width="2.6" stroke-linecap="round"/>';
+    },
+    function () {
+      var cl = [[168, 42, 17], [180, 26, 16], [201, 24, 17], [216, 38, 16], [210, 56, 15], [188, 58, 16], [170, 56, 12], [192, 41, 22]]
+        .map(function (c) { return '<circle cx="' + c[0] + '" cy="' + c[1] + '" r="' + c[2] + '"/>'; }).join("");
+      return sunnyAt({ x: 70 }) +
+             '<circle cx="131" cy="36" r="2.6" fill="#ece6ff"/><circle cx="142" cy="30" r="3.8" fill="#ece6ff"/>' +
+             '<g fill="#ece6ff" stroke="' + INK + '" stroke-width="6">' + cl + '</g><g fill="#ece6ff">' + cl + "</g>" +
+             '<g transform="translate(170.5 18) scale(.36)">' + bobiSvg({}) + "</g>";
+    },
+    function (col) {
+      return sunnyAt({ x: 62, arms: "call" }) + bobiAt({ x: 212, s: .42 }) +
+             '<path d="M122 40 q5 7 0 14 M130 34 q8 13 0 26" fill="none" stroke="' + col + '" stroke-width="3" stroke-linecap="round"/>';
+    }];
+  // chapter i's picture, 320 × 96, the ground line in the theme's text colour
+  function picSvg(i) {
+    return '<svg viewBox="0 0 320 96" width="320" height="96" aria-hidden="true" class="block mx-auto">' +
+           '<path d="M24 91 L296 91" stroke="currentColor" stroke-opacity=".22" stroke-width="3" stroke-linecap="round"/>' +
+           PIC_SCENES[i](textCol(CASES[i].h)) + "</svg>";
+  }
+  // home: Sunny & Bobi on a ground line, 142 × 80 (mock „bez krasnoludków": at 96 px home scrolled)
+  function heroesSvg() {
+    return '<svg viewBox="0 0 170 96" width="142" height="80" aria-hidden="true" class="block">' +
+           '<path d="M14 91 L156 91" stroke="currentColor" stroke-opacity=".22" stroke-width="3" stroke-linecap="round"/>' +
+           sunnyAt({ x: 10 }) + bobiAt({ x: 85 }) + "</svg>";
+  }
+  // the result when the drill is memorized: Sunny and Bobi, each its own svg (they hop one after the other), feet level
+  function danceHtml() {
+    return '<div class="dance flex items-end justify-center">' +
+           '<span><svg viewBox="0 0 100 121" width="80" height="97" aria-hidden="true">' + sunnySvg({}) + "</svg></span>" +
+           '<span><svg viewBox="0 0 100 116" width="71" height="82" aria-hidden="true">' + bobiSvg({}) + "</svg></span></div>";
+  }
+  // the sea sentence, word i = case i, its first letter in the case's colour. cur = the word to light (a chapter's
+  // case, painted whole in its colour); -1 = none (home)
   function sentHtml(cur) {
     return t("say_words").map(function (w, i) {
       var col = textCol(CASES[i].h);
@@ -590,42 +807,76 @@
       $("ft_" + m).innerHTML = "<span>" + (b && b.pts ? "🏆 " + b.pts : "") + "</span>" +
         (b && b.master ? "<span>⭐</span>" : '<span class="st0">☆</span>');
     });
+    CASES.forEach(function (c, i) {
+      var b = S.best["ch" + i], el = $("ft_ch" + i), m = !!(b && b.master);
+      el.textContent = m ? "⭐" : "☆";
+      el.classList.toggle("opacity-55", !m);
+    });
   }
-  $("homeG").innerHTML = CASES.map(function (c, i) { return gnomeSvg(i, 40); }).join("");
+  $("homeG").innerHTML = heroesSvg();
   $("homeS").innerHTML = sentHtml(-1);
-  $("ftTab").innerHTML = dotsHtml();
   $("goTab").onclick = function () { $("tabL").scrollTop = 0; show("tab"); log("table"); };
   Array.prototype.forEach.call(document.querySelectorAll("#home [data-m]"), function (b) {
     b.onclick = function () { drillStart(b.dataset.m); };
   });
-  // ② the seven chapters: gnome, number + name, ☆. The chapters themselves are the next step — a tap only logs yet
+  // ② the seven chapters, dark tiles (.calm): badge + name, ☆ → ⭐ once its Sprawdź is memorized. A tap opens the chapter
   $("homeCh").innerHTML = CASES.map(function (c, i) {
-    return '<button class="btn btn-primary rec h-auto min-h-11" data-ch="' + i + '" style="--h:' + c.h + '">' +
-           '<span class="flex items-center gap-1.5 px-2 py-1 w-full">' + gnomeSvg(i, 22) +
-           '<span class="flex-1 text-left text-sm leading-tight">' + (i + 1) + ". " + c.name + "</span>" +
-           '<span class="text-xs opacity-55">☆</span></span></button>';
+    return '<button class="btn rec calm h-auto min-h-10" data-ch="' + i + '">' +
+           '<span class="flex items-center gap-2 px-2.5 w-full">' + badgeSvg(i, 24) +
+           '<span class="flex-1 text-left text-sm leading-tight">' + c.name + "</span>" +
+           '<span id="ft_ch' + i + '" class="text-xs opacity-55">☆</span></span></button>';
   }).join("");
   $("homeCh").onclick = function (e) {
     var b = e.target.closest("button");
-    if (b) log("chapter " + (+b.dataset.ch + 1) + ": not built yet");
+    if (b) chOpen(+b.dataset.ch);
   };
+
+  /* ---------- ② a chapter ---------- */
+  // case i's „Zapamiętaj:" box content — the chapter screen and every wrong-answer sheet
+  function zapHtml(i) {
+    return '<p class="text-sm font-extrabold opacity-70">' + t("zap") + "</p>" + t("chapters")[i].zap.map(function (z) {
+      return '<p class="text-lg font-extrabold leading-tight">' + z + "</p>";
+    }).join("");
+  }
+  function chOpen(i) {
+    var c = CASES[i], ch = t("chapters")[i], col = textCol(c.h);
+    $("chG").innerHTML = badgeSvg(i, 30);
+    $("chN").textContent = c.name;
+    $("chN").style.color = col;
+    $("chS").innerHTML = sentHtml(i);
+    $("chP").innerHTML = picSvg(i);
+    $("chH").innerHTML = ch.head[0] + '<span style="color:' + col + '">' + ch.head[1] + "</span>" + ch.head[2];
+    $("chT").innerHTML = (ch.sit ? "<p>" + ch.sit + "</p>" : "") + "<p>" + ch.rule + "</p>";
+    $("chR").innerHTML = rowHtml(i);
+    $("chZ").style.borderColor = hatCol(c.h);
+    $("chZ").innerHTML = zapHtml(i);
+    $("chGo").onclick = function () { drillStart("ch" + i); };
+    $("ch").scrollTop = 0;
+    show("ch");
+    log("chapter " + (i + 1) + " · " + c.name);
+  }
   $("toSet").onclick = function () { show("set"); };
 
   /* ---------- the table (p. 73) ---------- */
   $("tabS").innerHTML = sentHtml(-1);
-  $("tabL").innerHTML = CASES.map(function (c, i) {
-    return '<div class="flex items-center gap-3 bg-base-200 rounded-box p-3">' + gnomeSvg(i, 52) +
+  // one row of p. 73 (also a chapter's row): badge + name, questions, helper words, examples
+  function rowHtml(i) {
+    var c = CASES[i];
+    return '<div class="flex items-center gap-3 bg-base-200 rounded-box p-3">' + badgeSvg(i, 42) +
            '<div class="flex-1 min-w-0"><p class="text-lg font-black leading-tight" style="color:' + textCol(c.h) + '">' +
-           (i + 1) + ". " + c.name + '</p><p class="text-xl font-bold leading-tight mt-1">' + c.q + "</p>" +
+           c.name + '</p><p class="text-xl font-bold leading-tight mt-1">' + c.q + "</p>" +
            '<p class="opacity-70 leading-tight">' + c.help + '</p><p class="text-sm opacity-60 mt-1">' + t("see_ex") + " " +
            c.ex + "</p></div></div>";
-  }).join("");
+  }
+  $("tabL").innerHTML = CASES.map(function (c, i) { return rowHtml(i); }).join("");
 
   /* ---------- drill ----------
      A card = { type, i }: „pyt" shows the name → pick the questions · „naz" shows the questions → pick the name ·
      „num" shows the name → pick its number · „ord" = one step of Kolejność: tap case i among the seven mixed-up names.
      The answers of pyt / naz / num stand in the cases' order. Pytania i nazwy mixes pyt + naz (5 of each); the exam
-     pyt + naz + num (5 of each), gives no help on a wrong answer and never shows the right one. */
+     pyt + naz + num (5 of each), gives no help on a wrong answer and never shows the right one.
+     „spr" = { type, i: the chapter, k: its sentence }: the sentence with a gap, its three forms in a new order every
+     card; a button's data-i is the form's place in the sentence's row (1 = the right one). */
   var mode = null, deck = [], card = null, cardI = 0, nFast = 0, nOk = 0, nPts = 0, cardT0 = 0, locked = true, padType = null;
   var miss = false;              // Kolejność: this step already had a wrong tap — it counts as wrong, the right one glows
   function shuffle(d) {
@@ -652,22 +903,34 @@
     }
     return d;
   }
-  function cardText(c) { return c.type === "naz" ? CASES[c.i].q : CASES[c.i].name; }
-  function pickText(type, i) { return type === "pyt" ? CASES[i].q : type === "num" ? String(i + 1) : CASES[i].name; }
-  // the seven answer buttons; for „ord" the names mixed up (never already in order), new for every round
+  function sprOf(c) { return t("chapters")[c.i].spr[c.k]; }
+  function cardText(c) {
+    return c.type === "spr" ? sprOf(c)[0] : c.type === "naz" ? CASES[c.i].q : CASES[c.i].name;
+  }
+  function pickText(type, i) {
+    return type === "spr" ? sprOf(card)[i] : type === "pyt" ? CASES[i].q : type === "num" ? String(i + 1) : CASES[i].name;
+  }
+  // the seven answer buttons; for „ord" the names mixed up (never already in order), new for every round;
+  // for „spr" the card's three forms, one under the other, new for every card
   function padFor(type) {
-    if (padType === type) return;
+    if (padType === type && type !== "spr") return;
     padType = type;
+    $("pad").classList.toggle("grid-cols-2", type !== "num" && type !== "spr");
+    $("pad").classList.toggle("grid-cols-7", type === "num");
+    if (type === "spr") {
+      $("pad").innerHTML = shuffle([1, 2, 3]).map(function (n) {
+        return '<button class="btn h-auto min-h-14 py-2 text-2xl font-bold" data-i="' + n + '">' + pickText(type, n) + "</button>";
+      }).join("");
+      return;
+    }
     var idx = [0, 1, 2, 3, 4, 5, 6];
     if (type === "ord") while (idx.join() === "0,1,2,3,4,5,6") shuffle(idx);
-    $("pad").classList.toggle("grid-cols-2", type !== "num");
-    $("pad").classList.toggle("grid-cols-7", type === "num");
     $("pad").innerHTML = idx.map(function (i, k) {
       return '<button class="btn h-auto min-h-12 py-2 px-1 text-lg font-bold' + (type !== "num" && k === 6 ? " col-span-2" : "") +
              (type === "num" ? " min-h-16 text-2xl" : "") + '" data-i="' + i + '">' + pickText(type, i) + "</button>";
     }).join("");
   }
-  // Kolejność's slots 1–7: the placed ones carry their name in the gnome's colour, the current one is framed
+  // Kolejność's slots 1–7: the placed ones carry their name in the case's colour, the current one is framed
   function slotsHtml() {
     return CASES.map(function (c, k) {
       var done = k < cardI, now = k === cardI;
@@ -690,20 +953,22 @@
     b.style.transition = "none"; b.style.width = w;
   }
 
-  // drillStart("kol" | "pn" | "egz"); with no argument the same drill again
+  // drillStart("kol" | "pn" | "egz" | "ch0" … "ch6"); with no argument the same drill again
   function drillStart(m) {
     if (m) mode = m;
     round++;
-    deck = mode === "egz" ? dealMix(["pyt", "naz", "num"], 5) : mode === "pn" ? dealMix(["pyt", "naz"], 5)
+    var chI = chOf(mode);
+    deck = chI >= 0 ? shuffle([0, 1, 2, 3, 4]).map(function (k) { return { type: "spr", i: chI, k: k }; })
+         : mode === "egz" ? dealMix(["pyt", "naz", "num"], 5) : mode === "pn" ? dealMix(["pyt", "naz"], 5)
          : CASES.map(function (c, i) { return { type: "ord", i: i }; });
     cardI = 0; nFast = 0; nOk = 0; nPts = 0; padType = null;
-    $("dS").innerHTML = sentHtml(-1);
+    $("dS").innerHTML = sentHtml(chI);
     $("dS").style.display = mode === "egz" ? "none" : "";
     $("dQ").style.display = mode === "kol" ? "none" : "";
     $("dO").style.display = mode === "kol" ? "flex" : "none";
     show("drill");
     nextCard();
-    log("drill " + mode + ": " + deck.map(function (c) { return c.type + ":" + CASES[c.i].ab; }).join(" · "));
+    log("drill " + mode + ": " + deck.map(function (c) { return c.type + ":" + CASES[c.i].ab + (c.type === "spr" ? c.k + 1 : ""); }).join(" · "));
   }
   function nextCard() {
     if (pz) { pz.next = true; return; }   // paused: the card (or the result) comes when the child goes on
@@ -714,7 +979,9 @@
     Array.prototype.forEach.call($("pad").children, function (b) { b.classList.remove("btn-success", "xNo", "ring-4", "ring-warning"); });
     $("dPr").textContent = t("q_" + card.type);
     if (card.type === "ord") $("dO").innerHTML = slotsHtml();
+    else if (card.type === "spr") $("dQ").innerHTML = cardText(card).replace("_", '<span class="gap"></span>');
     else $("dQ").textContent = cardText(card);
+    $("dQ").classList.toggle("sq", card.type === "spr");
     $("dQ").classList.remove("xNo");
     $("dFb").textContent = "";
     $("dWin").className = "win";
@@ -732,17 +999,23 @@
     var ms = Math.round(performance.now() - cardT0), c = CASES[card.i], q = cardText(card), pick = pickText(card.type, i);
     barStop();
     cardI++;
-    if (i === card.i) {
+    var spr = card.type === "spr";
+    if (spr ? i === 1 : i === card.i) {
       var fast = ms <= FAST_MS, pts = points(ms);
       nOk++; if (fast) nFast++;
       nPts += pts;
       sfx("good");
       btn.classList.add("btn-success");
+      // Sprawdź: the word goes into the gap, in the case's colour — a moment longer, to read the whole sentence
+      if (spr) {
+        var g = $("dQ").querySelector(".gap");
+        g.className = "gap ok pop"; g.textContent = pick; g.style.color = textCol(c.h);
+      }
       $("dFb").innerHTML = t(fast ? "fb_fast" : "fb_ok") + ' <b class="pop text-warning">+' + pts + "</b>";
       $("dScore").textContent = nPts;
       log(card.type + " " + q + " → " + pick + " ✓ " + (ms / 1000).toFixed(3) + "s +" + pts + (fast ? " ⚡" : " (slow)"));
       var r = round;
-      setTimeout(function () { if (r === round) nextCard(); }, 700);
+      setTimeout(function () { if (r === round) nextCard(); }, spr ? 1100 : 700);
     } else if (mode === "egz") {
       sfx("bad");
       $("dQ").classList.add("xNo");
@@ -750,18 +1023,22 @@
       var r2 = round;
       setTimeout(function () { if (r2 === round) nextCard(); }, 900);
     } else {
-      // wrong: the sheet slides up — the child's pick with ✕, then the right gnome, its number + name, questions, helper
+      // wrong: the sheet slides up — the child's pick with ✕, then the right case's badge + name, questions, helper, its „Zapamiętaj" words
       sfx("bad");
-      $("dWg").innerHTML = gnomeSvg(card.i, 84);
+      $("dWg").innerHTML = badgeSvg(card.i, 72);
       $("dWp").innerHTML = '<b class="text-error">✕</b> ' + pick;
-      $("dWn").textContent = (card.i + 1) + ". " + c.name;
+      $("dWn").textContent = c.name;
       $("dWn").style.color = textCol(c.h);
-      $("dWq").textContent = c.q;
-      $("dWh").textContent = c.help;
+      // Sprawdź: the whole sentence with the right form, its questions + helper under it
+      if (spr) $("dWq").innerHTML = q.replace("_", '<span style="color:' + textCol(c.h) + '">' + sprOf(card)[1] + "</span>");
+      else $("dWq").textContent = c.q;
+      $("dWh").textContent = spr ? c.q + " " + c.help : c.help;
+      $("dWz").style.borderColor = hatCol(c.h);
+      $("dWz").innerHTML = zapHtml(card.i);
       $("pad").classList.add("dim");
       var w = $("dWin");
       w.className = "win"; void w.offsetWidth; w.classList.add("on");   // restart the slide-up
-      log(card.type + " " + q + " → " + pick + " ✗ (wanted " + c.name + ")");
+      log(card.type + " " + q + " → " + pick + " ✗ (wanted " + (spr ? sprOf(card)[1] : c.name) + ")");
     }
   }
   // Kolejność: the right name goes into its slot (its button stays as an empty place, so the others do not move).
@@ -837,14 +1114,13 @@
 
   /* ---------- result ---------- */
   function finish() {
-    var need = MODES[mode].m, b = S.best[mode] || { fast: 0, ok: 0, master: false }, master = nFast >= need;
+    var need = (MODES[mode] || CH_MODE).m, b = S.best[mode] || { fast: 0, ok: 0, master: false }, master = nFast >= need;
     if (nFast > b.fast || (nFast === b.fast && nOk > b.ok)) { b.fast = nFast; b.ok = nOk; }
     b.master = b.master || master;
     var prev = b.pts, newRec = nPts > 0 && (prev === undefined || nPts > prev);
     if (newRec) b.pts = nPts;
     S.best[mode] = b; save();
-    $("resEm").innerHTML = master ? '<div class="dance flex gap-1 justify-center">' +
-      CASES.map(function (c, i) { return "<span>" + gnomeSvg(i, 38) + "</span>"; }).join("") + "</div>" : "💪";
+    $("resEm").innerHTML = master ? danceHtml() : "💪";
     $("resTitle").textContent = master ? t("res_master") : t("res_more", need);
     $("resFast").textContent = t("res_fast", nFast, deck.length);
     $("resOk").textContent = t("res_ok", nOk, deck.length);
