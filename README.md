@@ -10,9 +10,9 @@ The home screen, top to bottom, follows the way a child learns:
 - **The seven chapters**: one per case, each with its story, its rule and *Sprawdź!*: 5 sentences with a gap
 - **Kolejność**: the seven names mixed up; tap them from 1 to 7
 - **Pytania i nazwy**: a case's name → pick its questions, or the questions → pick the case
-- **Egzamin**: 15 cards, no help
+- **Egzamin**: 25 cards (questions, names, numbers and 10 of its own sentences with a gap), no help — the mistakes come at the end, each with the right answer
 - **📋 Tabela** (top left): the seven cases with their questions, helper words and examples (*babcia, koszyki*)
 
-A drill counts as memorized at 8 of 10 cards right and each under 5 seconds (Kolejność: all 7; the exam: 12 of 15).
+A drill counts as memorized at 8 of 10 cards right and each under 5 seconds (Kolejność: all 7; the exam: 20 of 25).
 
 To run it, open `index.html` in a browser. There is no build step, and it works offline.

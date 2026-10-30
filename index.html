@@ -99,7 +99,8 @@
   .rec.big .nm { padding-top: 18px; }
   .rec.big .ft { font-size: 1rem; padding: 5px 14px; }
   /* the sea sentence (home, table, drills — not the exam): each word's first letter in its case's colour */
-  .sent { font-weight: 700; line-height: 1.45; }
+  /* always one line (Lasha: „too big — make it fit on one line"): the size follows the screen width, at most text-lg */
+  .sent { font-weight: 700; line-height: 1.45; white-space: nowrap; font-size: min(1.125rem, 3.4vw); }
   .sent b { font-weight: 900; font-size: 1.3em; }
   /* a chapter's word (② Po kolei): painted whole in its case's colour and underlined */
   .sent .cur { text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 3px; }
@@ -140,6 +141,14 @@
     --btn-shadow: 0 4px 0 #1b1846, 0 7px 12px rgb(0 0 0 / .22); margin-bottom: 4px; }
   [data-theme=dojo] #app .btn.rec.calm:active { --btn-bg: #3a3479; --btn-shadow: 0 1px 0 #1b1846; }
   [data-theme=dojo] #home h1 { font-weight: 900; text-shadow: 0 4px 0 rgb(0 0 0 / .28); }
+  /* home: the thin faint lines under the title and under the sea sentence */
+  #home .hline { border-color: color-mix(in oklab, var(--color-base-content) 18%, transparent); }
+  /* the 🏆 squares (Ninja 10's): see-through glass on the sky, the same edge */
+  [data-theme=dojo] #app [data-top] {
+    --btn-bg: rgb(255 255 255 / .1); --btn-border: rgb(255 255 255 / .28); --btn-shadow: 0 5px 0 rgb(0 0 0 / .35);
+    border-width: 2px; border-radius: 18px; margin-bottom: 5px; transition: translate .07s, box-shadow .07s;
+  }
+  [data-theme=dojo] #app [data-top]:active { translate: 0 4px; --btn-shadow: 0 1px 0 rgb(0 0 0 / .35); }
 </style>
 </head>
 <body class="h-full m-0 bg-base-100 text-base-content">
@@ -148,38 +157,52 @@
     <!-- home = topic 1's menu (the only topic so far). Everything is open from the start (Lasha picked „B").
          Home mock „A · spokojne kafelki": top to bottom the way a child learns — the seven chapters one by one ·
          Kolejność and Pytania i nazwy (all seven together) · the exam at the bottom. No section labels.
-         The table is 📋 top left, mirroring ⚙️ (beside ⚙️ it would touch the picture) -->
+         The table is 📋 top left, mirroring ⚙️ (beside ⚙️ it would touch the picture).
+         The chapters stand in one column, 1 → 7 top to bottom (Lasha: „გაფანტული ნუმერაცია" in two columns) -->
     <section id="home" class="h-full flex-col p-5 pt-3 gap-3 overflow-y-auto">
-      <div class="flex justify-between">
+      <!-- relative z-10: the picture block below is pulled up over this row (-mt-12) and caught every tap on 📋 / ⚙️ -->
+      <div class="flex justify-between relative z-10">
         <button id="goTab" class="btn btn-ghost btn-circle text-2xl" data-ta="m_tab">📋</button>
         <button id="toSet" class="btn btn-ghost btn-circle text-2xl">⚙️</button>
       </div>
-      <!-- Sunny & Bobi, up between 📋 and ⚙️ (-mt-12) so home does not scroll -->
-      <div class="flex flex-col items-center gap-1 -mt-12">
+      <!-- Sunny & Bobi, up between 📋 and ⚙️ (-mt-12) so home does not scroll. The title, the sea sentence and the
+           chapters stand apart: a thin faint line under each of the two, 12 px on both sides (Lasha's pick „ბ" + a
+           line under the title too) -->
+      <div class="flex flex-col items-center gap-1 -mt-12 pb-3 border-b-[1.5px] hline">
         <div id="homeG" class="flex justify-center"></div>
         <h1 class="text-3xl font-black text-primary" data-t="title"></h1>
-        <p id="homeS" class="sent flex flex-wrap justify-center gap-x-1.5 text-lg text-center"></p>
+        <div class="self-stretch my-2 border-t-[1.5px] hline"></div>
+        <p id="homeS" class="sent flex justify-center gap-x-1 text-center"></p>
       </div>
-      <div id="homeCh" class="grid grid-cols-2 gap-x-2 gap-y-1.5"></div>
-      <div class="grid grid-cols-2 gap-2">
-        <button class="btn btn-primary rec h-auto min-h-16" data-m="kol" style="--h:250">
-          <span class="nm text-lg leading-tight" data-t="m_kol"></span><span class="ft" id="ft_kol"></span></button>
-        <button class="btn btn-primary rec h-auto min-h-16" data-m="pn" style="--h:65">
-          <span class="nm text-lg leading-tight" data-t="m_pn"></span><span class="ft" id="ft_pn"></span></button>
+      <div id="homeCh" class="flex flex-col gap-1"></div>
+      <!-- the two top-10 lists (mock „გ", Lasha 2026-10-30): the practice 🏆 („cw" = the chapters + these two added up)
+           beside Kolejność + Pytania i nazwy, the exam's 🏆 beside the exam. No sum line, no name ribbon (home fits) -->
+      <div class="flex gap-2">
+        <div class="grid grid-cols-2 gap-2 flex-1">
+          <button class="btn btn-primary rec h-auto min-h-16" data-m="kol" style="--h:250">
+            <span class="nm text-lg leading-tight" data-t="m_kol"></span><span class="ft" id="ft_kol"></span></button>
+          <button class="btn btn-primary rec h-auto min-h-16" data-m="pn" style="--h:65">
+            <span class="nm text-lg leading-tight" data-t="m_pn"></span><span class="ft" id="ft_pn"></span></button>
+        </div>
+        <button class="btn btn-outline btn-primary h-auto min-h-16 w-20 text-2xl" data-top="cw">🏆</button>
       </div>
-      <button class="btn btn-primary rec big h-auto min-h-16 shrink-0 mt-auto" data-m="egz" style="--h:85">
-        <span class="nm text-2xl" data-t="m_egz"></span><span class="ft" id="ft_egz"></span></button>
+      <div class="flex gap-3 mt-auto shrink-0">
+        <button class="btn btn-primary rec big h-auto min-h-16 flex-1" data-m="egz" style="--h:85">
+          <span class="nm text-2xl" data-t="m_egz"></span><span class="ft" id="ft_egz"></span></button>
+        <button class="btn btn-outline btn-primary h-auto min-h-16 w-20 text-2xl" data-top="egz">🏆</button>
+      </div>
     </section>
 
-    <!-- the table, as the textbook's p. 73 „PRZYPADKI RZECZOWNIKA": the seven cases top to bottom, each with
-         its badge + name, its questions, its helper words and the examples -->
+    <!-- the table, as the textbook's p. 73 „PRZYPADKI RZECZOWNIKA": the seven cases top to bottom, all on one screen
+         (Lasha's mock „ა · ორი ხაზი"): no cards, thin lines; badge · name · questions, then helper words · examples,
+         small and faint. Only the badges carry colour -->
     <section id="tab" class="h-full flex-col p-5 gap-3">
       <div class="flex items-center gap-2">
         <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
         <h2 class="text-2xl font-bold" data-t="home_sub"></h2>
       </div>
-      <div id="tabS" class="sent flex flex-wrap justify-center gap-x-2 text-lg text-center"></div>
-      <div id="tabL" class="flex-1 overflow-y-auto flex flex-col gap-2"></div>
+      <div id="tabS" class="sent flex justify-center gap-x-1 text-center"></div>
+      <div id="tabL" class="flex-1 overflow-y-auto flex flex-col"></div>
       <button class="btn btn-primary btn-lg btn-block shrink-0 quit" data-t="btn_back"></button>
     </section>
 
@@ -192,7 +215,7 @@
         <span id="chG" class="flex"></span>
         <h2 id="chN" class="text-2xl font-black"></h2>
       </div>
-      <div id="chS" class="sent flex flex-wrap justify-center gap-x-2 text-lg text-center"></div>
+      <div id="chS" class="sent flex justify-center gap-x-1 text-center"></div>
       <div class="flex-1 flex flex-col justify-center gap-3">
         <div id="chP" class="shrink-0"></div>
         <p id="chH" class="text-2xl font-black text-center leading-tight"></p>
@@ -212,7 +235,7 @@
         <span id="dCount" class="text-sm opacity-60"></span>
         <span id="dScore" class="text-lg font-bold text-warning"></span>
       </div>
-      <div id="dS" class="sent flex flex-wrap justify-center gap-x-2 text-lg text-center"></div>
+      <div id="dS" class="sent flex justify-center gap-x-1 text-center"></div>
       <div class="h-2 shrink-0 rounded-full bg-base-300 overflow-hidden"><div id="bar" class="h-full bg-primary"></div></div>
       <div class="flex-1 flex flex-col items-center justify-center gap-3 text-center">
         <p id="dPr" class="text-lg opacity-70"></p>
@@ -256,15 +279,63 @@
           <p id="resOk" class="opacity-70"></p>
         </div>
       </div>
-      <button id="resAgain" class="btn btn-primary btn-lg btn-block gap-2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span data-t="btn_again"></span></button>
-      <button class="btn btn-outline btn-primary btn-lg btn-block gap-2 quit"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span data-t="btn_back"></span></button>
+      <!-- the exam only: its mistakes („Do powtórki:"), each with the right answer and the case's „Zapamiętaj"; a long
+           list scrolls here, the score above stays -->
+      <div id="resErr" class="w-full min-h-0 overflow-y-auto flex flex-col gap-2 text-left" style="display:none"></div>
+      <button id="resAgain" class="btn btn-primary btn-lg btn-block gap-2 shrink-0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg><span data-t="btn_again"></span></button>
+      <button class="btn btn-outline btn-primary btn-lg btn-block gap-2 shrink-0 quit"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg><span data-t="btn_back"></span></button>
     </section>
 
-    <!-- settings: sounds, theme, start over (as Ninja 10, without the ninja, the name and the hints) -->
+    <!-- one list's top 10, from the server (as Ninja 10). Shows even when the child has no record yet.
+         The rows carry no picture (Lasha „ბ ოკ", 2026-10-30: there is no boy drawing). ✕ and „back" → home -->
+    <section id="top" class="h-full flex-col p-5 gap-4">
+      <div class="flex items-center gap-2">
+        <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
+        <h2 id="topTitle" class="text-2xl font-bold"></h2>
+      </div>
+      <p id="topMsg" class="text-center text-lg opacity-70"></p>
+      <div id="topList" class="flex flex-col gap-2 overflow-y-auto"></div>
+      <p id="topMe" class="text-center text-lg font-bold"></p>
+      <button class="btn btn-ghost btn-lg btn-block mt-auto quit" data-t="btn_back"></button>
+    </section>
+
+    <!-- first launch: boy or girl, no default — as Ninja 10's ninja pick (Lasha „ა იგივე რაც ნინძაშია", 2026-10-30), only
+         for the random name („Uczeń" / „Uczennica"). Shown while S.g is empty; later it changes in ⚙️ -->
+    <section id="pick" class="h-full flex-col justify-center p-5 gap-8">
+      <div id="pickG" class="flex justify-center"></div>
+      <h1 class="text-3xl font-bold text-center text-primary" data-t="who"></h1>
+      <div class="grid grid-cols-2 gap-3">
+        <button class="btn h-auto min-h-20 text-xl" data-pick="boy" data-t="g_boy"></button>
+        <button class="btn h-auto min-h-20 text-xl" data-pick="girl" data-t="g_girl"></button>
+      </div>
+    </section>
+
+    <!-- first launch, right after the pick: the child's name for the top 10. The field comes filled with a random
+         name („Uczeń22763"), so one tap is enough (as Ninja 10). Later the name changes in ⚙️ -->
+    <section id="name" class="h-full flex-col justify-center p-5 gap-6">
+      <div id="nameG" class="flex justify-center"></div>
+      <h1 class="text-3xl font-bold text-center text-primary" data-t="name_title"></h1>
+      <input id="nameIn" type="text" maxlength="16" autocomplete="off" class="input input-bordered input-lg w-full text-center text-2xl">
+      <p class="text-center opacity-70" data-t="name_hint"></p>
+      <button id="nameOk" class="btn btn-primary btn-lg btn-block" data-t="name_ok"></button>
+    </section>
+
+    <!-- settings: boy / girl, the name, sounds, theme, start over (as Ninja 10, without the ninja and the hints) -->
     <section id="set" class="h-full flex-col p-5 gap-4 overflow-y-auto">
       <div class="flex items-center gap-2">
         <button class="btn btn-ghost btn-sm text-xl quit">✕</button>
         <h2 class="text-2xl font-bold" data-t="set_title"></h2>
+      </div>
+      <div class="flex flex-col gap-2 bg-base-200 rounded-box p-4">
+        <span class="text-sm opacity-70" data-t="who"></span>
+        <div class="join w-full">
+          <button class="btn join-item flex-1" data-kid="boy" data-t="g_boy"></button>
+          <button class="btn join-item flex-1" data-kid="girl" data-t="g_girl"></button>
+        </div>
+      </div>
+      <div class="flex flex-col gap-2 bg-base-200 rounded-box p-4">
+        <span class="text-sm opacity-70" data-t="set_name"></span>
+        <input id="setName" type="text" maxlength="16" autocomplete="off" class="input input-bordered w-full text-lg">
       </div>
       <label class="flex items-center justify-between text-lg bg-base-200 rounded-box p-4">
         <span data-t="set_sound"></span>
@@ -343,6 +414,9 @@
       fb_fast: "⚡ Szybko!",
       fb_ok: "Dobrze!",
       res_master: "Zapamiętane!",
+      // the exam's result: its mistakes, each with the right answer and the case's „Zapamiętaj" words
+      res_err: "Do powtórki:",
+      res_noerr: "Bez błędów! 🎉",
       res_more: function (n) { return "Jeszcze raz — potrzeba " + n + " szybkich odpowiedzi."; },
       res_fast: function (n, of) { return "⚡ Szybko i dobrze: " + n + " / " + of; },
       res_ok: function (n, of) { return "✓ Dobrze: " + n + " / " + of; },
@@ -364,6 +438,25 @@
       exit_ask: "Zamknąć aplikację?",
       exit_yes: "Tak, zamknij",
       exit_no: "Nie",
+      // the top 10 (Ninja 10's words; „who" = my draft)
+      who: "Kim jesteś?",
+      g_boy: "Chłopiec",
+      g_girl: "Dziewczynka",
+      name_title: "Jak masz na imię?",
+      name_hint: "To imię zobaczą wszyscy w Top 10",
+      name_ok: "Gotowe!",
+      /* „Uczeń" / „Uczennica" follow the child's pick */
+      name_rnd: function (n, g) { return (g === "girl" ? "Uczennica" : "Uczeń") + n; },
+      set_name: "Imię",
+      m_cw: "Ćwiczenia",
+      cw_sum: function (p) { return "Ćwiczenia razem: " + p; },
+      top_title: function (list) { return "🏆 Top 10 · " + list; },
+      top_load: "Ładuję…",
+      top_off: "Top 10 potrzebuje internetu 📶",
+      /* no „bądź pierwszy/pierwsza" — gendered */
+      top_empty: "Jeszcze nikogo tu nie ma — zagraj!",
+      top_me: function (place, pts) { return "Ty — " + place + ". miejsce · " + pts; },
+      top_me0: "Ty — na razie 0 punktów",
       // the seven cases exactly as the textbook's table (p. 73): name, questions, helper words, examples
       // (babcia singular, koszyki plural). ab = the short name from p. 84 · h = the case's hue (oklch), red → pink
       cases: [
@@ -379,51 +472,81 @@
       // ② the seven chapters = Lasha's story „7 przygód Sunny i Bobiego", one per case (questions: the textbook's only).
       // head = [before, the case's form, after] · sit = what happens · rule · zap = „Zapamiętaj" lines.
       // spr = Sprawdź's 5 cards: [sentence, _ = the gap, the right form, two wrong forms of the same word] — words only
-      // from the table and the story; no wrong form may also be right there (no „To jest Bobiego" = Bobi's).
-      // Lasha checked the 35 in the mock („მომწონს რაც არის")
+      // from the table and the story; no wrong form may also be right there (no „To jest psa").
+      // Names only a few times (Lasha 2026-10-30: Sunny stays, but not so many dog names): Bobi in the title + heads 1, 5, 7;
+      // the cards carry no names — pies and the family's words. Heads, sit, rule, zap = Lasha's texts word for word
       chapters: [
-        { head: ["To jest ", "Bobi", "."], sit: "",
-          rule: "Kiedy przedstawiamy kogoś albo mówimy, kto coś robi, używamy mianownika.",
-          zap: ["Poznajemy bohatera!"],
-          spr: [["To jest _.", "Bobi", "Bobiemu", "Bobim"], ["_ piecze ciasto.", "Babcia", "Babcię", "Babci"],
-                ["Tu są _.", "koszyki", "koszykom", "koszykami"], ["_ szczeka.", "Bobi", "Bobiego", "Bobiemu"],
+        { head: ["To jest ", "Bobi", "."], sit: "Dziewczynka i jej pies. Poznajcie się!",
+          rule: "Mianownik odpowiada na pytania kto? co? To forma ze słownika. Używamy jej, gdy kogoś przedstawiamy.",
+          zap: ["Kto to jest? To jest...!"],
+          spr: [["To jest _.", "tata", "tatę", "tacie"], ["_ piecze ciasto.", "Babcia", "Babcię", "Babci"],
+                ["Tu są _.", "koszyki", "koszykom", "koszykami"], ["_ szczeka.", "Pies", "Psa", "Psu"],
                 ["Tu jest _.", "mama", "mamę", "mamie"]] },
-        { head: ["Nie ma ", "Bobiego", "!"], sit: "Sunny szuka psa. Bobiego nigdzie nie ma!",
-          rule: "Dopełniacz często pojawia się, gdy czegoś nie ma, czegoś potrzebujemy albo mówimy o czymś, czego brakuje.",
-          zap: ["Nie ma…!"],
-          spr: [["Nie ma _!", "Bobiego", "Bobi", "Bobim"], ["Nie ma _.", "babci", "babcię", "babcią"],
-                ["Nie ma tu _.", "koszyków", "koszyki", "koszykami"], ["Sunny szuka _.", "psa", "pies", "psem"],
+        { head: ["Nie ma ", "psa", "!"], sit: "Buda pusta, miska pełna. Gdzie jest pies? Sunny szuka wszędzie, ale nigdzie go nie ma!",
+          rule: "Dopełniacz odpowiada na pytania kogo? czego? Używamy go, gdy mówimy, że kogoś lub czegoś nie ma.",
+          zap: ["Nikogo nie ma!", "Nie ma psa!"],
+          spr: [["Nie ma _!", "psa", "pies", "psem"], ["Nie ma _.", "babci", "babcię", "babcią"],
+                ["Nie ma tu _.", "koszyków", "koszyki", "koszykami"], ["Szukam _.", "kolegi", "kolega", "kolegą"],
                 ["Nie ma _.", "mamy", "mamę", "mamą"]] },
-        { head: ["Sunny daje ", "Bobiemu", " smaczek."], sit: "Sunny ma smaczek. Bobi go dostaje.",
-          rule: "Celownik pokazuje, komu coś dajemy, komu pomagamy lub komu coś przynosimy.",
+        { head: ["Sunny daje ", "psu", " smaczek."],
+          sit: "Pies był bardzo grzeczny. Teraz dostaje nagrodę i merda ogonem ze szczęścia.",
+          rule: "Celownik odpowiada na pytania komu? czemu? Mówi, komu coś dajemy lub pomagamy.",
           zap: ["Ktoś coś dostaje!"],
-          spr: [["Sunny daje _ smaczek.", "Bobiemu", "Bobiego", "Bobim"], ["Przyglądam się _.", "babci", "babcię", "babcią"],
+          spr: [["Daję _ smaczek.", "psu", "psa", "psem"], ["Przyglądam się _.", "babci", "babcię", "babcią"],
                 ["Przyglądam się _.", "koszykom", "koszyki", "koszykach"], ["Pomagam _.", "mamie", "mamę", "mamą"],
                 ["Daję _ prezent.", "tacie", "tatę", "tatą"]] },
-        { head: ["Sunny widzi ", "Bobiego", "."], sit: "Sunny patrzy na psa. To Bobi jest tym, kogo widzi.",
-          rule: "Biernik często wskazuje osobę lub rzecz, na którą skierowana jest czynność.",
-          zap: ["Widzę kogoś lub coś!"],
-          spr: [["Sunny widzi _.", "Bobiego", "Bobi", "Bobiemu"], ["Widzę _.", "babcię", "babcia", "babci"],
+        { head: ["Sunny widzi ", "psa", "."], sit: "Sunny patrzy przez lornetkę. Daleko, za drzewem — widzi znajomy ogon!",
+          rule: "Biernik odpowiada na pytania kogo? co? Mówi, kogo lub co widzimy, kochamy, mamy.",
+          zap: ["Kogo widzę? Widzę psa!"],
+          spr: [["Lubię _.", "tatę", "tata", "tacie"], ["Widzę _.", "babcię", "babcia", "babci"],
                 ["Widzę _.", "koszyki", "koszyków", "koszykach"], ["Kocham _.", "mamę", "mama", "mamie"],
                 ["Mam _.", "psa", "pies", "psu"]] },
-        { head: ["Sunny idzie ", "z Bobim", "."], sit: "Sunny nie idzie sama. Towarzyszy jej Bobi.",
-          rule: "Narzędnik często mówi, z kim coś robimy albo czym się posługujemy.",
-          zap: ["Razem z kimś albo za pomocą czegoś!"],
-          spr: [["Sunny idzie z _.", "Bobim", "Bobi", "Bobiemu"], ["Idę z _.", "babcią", "babcię", "babcia"],
+        { head: ["Sunny idzie ", "z Bobim", "."], sit: "Koniec szukania. Idą razem na długi spacer.",
+          rule: "Narzędnik odpowiada na pytania z kim? z czym? Mówi, z kim coś robimy.",
+          zap: ["Z kim? Razem z psem!"],
+          spr: [["Idę na spacer z _.", "psem", "pies", "psu"], ["Idę z _.", "babcią", "babcię", "babcia"],
                 ["Idę z _.", "koszykami", "koszykom", "koszykach"], ["Rozmawiam z _.", "tatą", "tatę", "tacie"],
                 ["Bawię się z _.", "kolegą", "kolegę", "koledze"]] },
-        { head: ["Sunny myśli ", "o Bobim", "."], sit: "Sunny myśli o swoim psie. Bobi jest tematem jej myśli.",
-          rule: "Miejscownik występuje zwykle po określonych słowach, np. o, w, na, przy.",
-          zap: ["Myślę o kimś albo mówię o czymś!"],
-          spr: [["Sunny myśli o _.", "Bobim", "Bobiego", "Bobi"], ["Mówię o _.", "babci", "babcię", "babcią"],
-                ["Mówię o _.", "koszykach", "koszyki", "koszykami"], ["Myślę o _.", "mamie", "mamę", "mamą"],
-                ["Sunny myśli o swoim _.", "psie", "psa", "psem"]] },
-        { head: ["", "Bobi", "! Chodź tutaj!"], sit: "Bobi pobiegł za daleko. Sunny woła swojego psa.",
-          rule: "Wołacza używamy, gdy zwracamy się bezpośrednio do kogoś lub czegoś.",
-          zap: ["Wołamy!", "Bobi! Mamo! Tato! Kolego!"],
-          spr: [["_! Chodź tutaj!", "Bobi", "Bobiego", "Bobim"], ["_, chodź tutaj!", "Babciu", "Babcię", "Babcią"],
+        { head: ["Sunny myśli ", "o psie", "."], sit: "Wieczór. Sunny siedzi w oknie i myśli tylko o jednym...",
+          rule: "Miejscownik odpowiada na pytania o kim? o czym? Zawsze z przyimkiem: o, w, na, przy.",
+          zap: ["O kim myślę? Myślę o psie!"],
+          spr: [["Myślę o _.", "psie", "psa", "psem"], ["Mówię o _.", "babci", "babcię", "babcią"],
+                ["Mówię o _.", "koszykach", "koszyki", "koszykami"], ["Opowiadam o _.", "mamie", "mamę", "mamą"],
+                ["Rozmawiamy o _.", "koledze", "kolegę", "kolegą"]] },
+        { head: ["", "Bobi", "! Chodź tutaj!"], sit: "Ojej! Pies pobiegł za piłką. Trzeba go zawołać!",
+          rule: "Wołacza używamy, gdy kogoś wołamy.",
+          zap: ["Wołamy!", "Piesku! Babciu! Mamo!"],
+          spr: [["_, do nogi!", "Piesku", "Pieska", "Pieskiem"], ["_, chodź tutaj!", "Babciu", "Babcię", "Babcią"],
                 ["_, pomóż mi!", "Mamo", "Mamę", "Mamą"], ["_, zobacz!", "Tato", "Tatę", "Tacie"],
                 ["Cześć, _!", "kolego", "kolegę", "kolegą"]] }
+      ],
+      // ③ the exam's own sentences — Lasha's, word for word (session 7: harder than the chapters', which keep theirs).
+      // One row per case, M → W; each card as spr: [sentence, _ = the gap, the right form, two wrong forms].
+      // Round 2 (Lasha): the 5th of each case is plural (lalki), Narzędnik's „bawię się" without „z" (the bookish form).
+      // Dopełniacz's plural was „Nie ma _ w szafie! | lalek | lalki | lalkami" — two right answers („Nie ma lalki w
+      // szafie" is right too) → „żadnych" forces the plural (Lasha picked „ბ")
+      exam_spr: [
+        [["To jest _ w pelerynie!", "tata", "tatę", "tacie"], ["To jest _ w kuchni!", "mama", "mamę", "mamie"],
+         ["To jest _ superbohater!", "pies", "psa", "psu"], ["To jest _ w sukience!", "lalka", "lalkę", "lalce"],
+         ["Tu są _ na półce!", "lalki", "lalek", "lalkami"]],
+        [["Nie ma _ w domu!", "taty", "tata", "tatą"], ["Nie ma _ w pokoju!", "mamy", "mama", "mamą"],
+         ["Nie ma _ na podwórku!", "psa", "pies", "psem"], ["Nie ma _ na półce!", "lalki", "lalka", "lalką"],
+         ["Nie ma tu żadnych _!", "lalek", "lalki", "lalkami"]],
+        [["Daję _ prezent!", "tacie", "tatę", "tatą"], ["Daję _ kwiaty!", "mamie", "mamę", "mamą"],
+         ["Daję _ kość!", "psu", "psa", "psem"], ["Daję _ sukienkę!", "lalce", "lalkę", "lalką"],
+         ["Daję _ kredki!", "lalkom", "lalki", "lalkami"]],
+        [["Widzę _ przez okno!", "tatę", "tata", "tacie"], ["Widzę _ w ogrodzie!", "mamę", "mama", "mamie"],
+         ["Widzę _ pod stołem!", "psa", "pies", "psu"], ["Widzę _ na łóżku!", "lalkę", "lalka", "lalce"],
+         ["Widzę _ na dywanie!", "lalki", "lalek", "lalkom"]],
+        [["Idę z _ do lasu!", "tatą", "tata", "tatę"], ["Idę z _ na spacer!", "mamą", "mama", "mamę"],
+         ["Idę z _ na dwór!", "psem", "pies", "psu"], ["Bawię się _ w dom!", "lalką", "lalka", "lalkę"],
+         ["Bawię się _ na boisku!", "piłką", "piłka", "piłkę"]],
+        [["Myślę o _ cały dzień!", "tacie", "tatę", "tatą"], ["Myślę o _ przed snem!", "mamie", "mamę", "mamą"],
+         ["Myślę o _ w nocy!", "psie", "psa", "psem"], ["Myślę o _ z bajki!", "lalce", "lalkę", "lalką"],
+         ["Myślę o _ z przedszkola!", "lalkach", "lalki", "lalkami"]],
+        [["Hej, _! Chodź tutaj!", "Tato", "Tatę", "Tacie"], ["Hej, _! Pomóż mi!", "Mamo", "Mamę", "Mamie"],
+         ["_, do nogi!", "Piesku", "Pieska", "Pieskiem"], ["Hej, _! Gdzie jesteś?", "Lalko", "Lalkę", "Lalce"],
+         ["Hej, _! Gdzie jesteście?", "Lalki", "Lalek", "Lalkami"]]
       ]
     }
   };
@@ -431,9 +554,10 @@
 
   /* ---------- settings ---------- */
   var FAST_MS = 5000;            // an answer counts as "known by heart" only under this (reading takes longer than a sum)
-  // a round's size and its „memorized" line: 8 of 10 fast and right (as Ninja 10); the exam 12 of 15 (the same 80 %);
+  // a round's size and its „memorized" line: 8 of 10 fast and right (as Ninja 10); the exam 20 of 25 (the same 80 %;
+  // 25 = EXAM_DECK, was 20 / 16 until session 8 — a 20-card exam's record is dropped in load());
   // Kolejność = the seven in order, every step right the first time and fast
-  var MODES = { kol: { n: 7, m: 7 }, pn: { n: 10, m: 8 }, egz: { n: 15, m: 12 } };
+  var MODES = { kol: { n: 7, m: 7 }, pn: { n: 10, m: 8 }, egz: { n: 25, m: 20 } };
   // a chapter's Sprawdź („ch0" … „ch6", saved under that key): its 5 sentences, memorized at 4 of 5 fast and right
   var CH_MODE = { n: 5, m: 4 };
   function chOf(m) { return /^ch\d$/.test(m) ? +m.slice(2) : -1; }
@@ -447,17 +571,42 @@
   // Ninja 10's 6 themes, dojo first — same list as sim.html
   var THEMES = ["dojo", "forest", "dracula", "night", "milioni", "milioni-light"];
   var DEFAULT_THEME = "dojo";
-  // S.best: drill → { pts: the best points, fast, ok: of the best round, master: memorized once }
-  var S = { lang: "pl", best: {}, sound: true, theme: null };
+  // S.best: drill → { pts: the best points, fast, ok: of the best round, master: memorized once, n: the round's size }
+  // Top 10 (as Ninja 10): S.uid = this child's secret id (32 hex, made once on this device, never shown) — the server
+  // knows the child by it, not by the name. S.name = what the list shows. S.g = "boy" | "girl", only for the random
+  // name (not sent). S.sent = the last payload the server accepted, so a sync with nothing new is skipped. A save from
+  // before the top 10 gets a uid on load, then the pick and the name screen once
+  var S = { lang: "pl", best: {}, sound: true, theme: null, g: null, uid: null, name: "", sent: "" };
   function load() {
     try {
       var d = JSON.parse(localStorage.getItem(SAVE_KEY));
       if (d && d.best && typeof d.best === "object") S.best = d.best;
+      // the exam's record + ⭐ count only for its current size: an older exam's (15 cards before session 7, no n) is
+      // dropped (Lasha: „განულდეს")
+      if (S.best.egz && S.best.egz.n !== MODES.egz.n) delete S.best.egz;
       if (d && typeof d.sound === "boolean") S.sound = d.sound;
       if (d && THEMES.indexOf(d.theme) >= 0) S.theme = d.theme;
+      if (d && (d.g === "boy" || d.g === "girl")) S.g = d.g;
+      if (d && /^[0-9a-f]{32}$/.test(d.uid)) S.uid = d.uid;
+      if (d && typeof d.name === "string") S.name = cleanName(d.name);
+      if (d && typeof d.sent === "string") S.sent = d.sent;
     } catch (e) { log("load failed: " + e.message); }
+    if (!S.uid) { S.uid = newUid(); save(); }
   }
+  function newUid() {
+    var a = new Uint8Array(16);
+    crypto.getRandomValues(a);
+    return Array.prototype.map.call(a, function (x) { return (x + 256).toString(16).slice(1); }).join("");
+  }
+  // a name as the list may show it: no control characters or < >, one space between words, at most 16 letters
+  // (the server cleans it the same way — this only keeps the field honest)
+  function cleanName(v) {
+    v = String(v).replace(/[\u0000-\u001f\u007f<>]/g, "").replace(/\s+/g, " ").trim();
+    return Array.from(v).slice(0, 16).join("").trim();
+  }
+  var wiped = false;             // „start over" is reloading: a late sync() reply must not write the old state back
   function save() {
+    if (wiped) return;
     try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { log("save failed: " + e.message); }
   }
 
@@ -772,9 +921,12 @@
      Back = one screen back: an open dialog closes · a drill → the pause window · every other screen → home ·
      home → „close the app?" */
   function back() {
+    if (document.activeElement) document.activeElement.blur();   // ⚙️ name field: its change saves the name
     if ($("exitAsk").open) $("exitAsk").close();
     else if ($("resetAsk").open) $("resetAsk").close();
     else if ($("pauseAsk").open) $("pauseAsk").close();
+    else if (current === "pick") log("back: the pick first");
+    else if (current === "name") log("back: the name first");
     else if (current === "drill") pauseOpen();
     else if (current !== "home") goHome();
     else { $("exitAsk").showModal(); log("back: close the app?"); }
@@ -819,9 +971,10 @@
   Array.prototype.forEach.call(document.querySelectorAll("#home [data-m]"), function (b) {
     b.onclick = function () { drillStart(b.dataset.m); };
   });
-  // ② the seven chapters, dark tiles (.calm): badge + name, ☆ → ⭐ once its Sprawdź is memorized. A tap opens the chapter
+  // ② the seven chapters, dark tiles (.calm): badge + name, ☆ → ⭐ once its Sprawdź is memorized. A tap opens the chapter.
+  // One column of seven: min-h-9, so home still fits without scrolling
   $("homeCh").innerHTML = CASES.map(function (c, i) {
-    return '<button class="btn rec calm h-auto min-h-10" data-ch="' + i + '">' +
+    return '<button class="btn rec calm h-auto min-h-9" data-ch="' + i + '">' +
            '<span class="flex items-center gap-2 px-2.5 w-full">' + badgeSvg(i, 24) +
            '<span class="flex-1 text-left text-sm leading-tight">' + c.name + "</span>" +
            '<span id="ft_ch' + i + '" class="text-xs opacity-55">☆</span></span></button>';
@@ -855,11 +1008,126 @@
     show("ch");
     log("chapter " + (i + 1) + " · " + c.name);
   }
-  $("toSet").onclick = function () { show("set"); };
+  function openSet() { $("setName").value = S.name; show("set"); }
+  $("toSet").onclick = openSet;
+
+  /* ---------- boy / girl + the name (for the top 10, as Ninja 10) ---------- */
+  // the pick and the name screen: Sunny & Bobi on top (my draft — Ninja 10 shows the child's ninja there)
+  $("pickG").innerHTML = $("nameG").innerHTML = heroesSvg();
+  function drawKid() {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-kid]"), function (b) {
+      b.classList.toggle("btn-primary", b.dataset.kid === S.g);
+    });
+  }
+  function setKid(g) { S.g = g; save(); drawKid(); log("kid → " + g); sync(); }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-pick]"), function (b) {
+    b.onclick = function () { setKid(b.dataset.pick); if (S.name) goHome(); else askName(); };
+  });
+  // first launch: the field comes filled with a random name — „Gotowe!" alone is enough; an emptied field keeps it
+  var rndName = "";
+  function askName() {
+    rndName = t("name_rnd", 10000 + Math.floor(Math.random() * 90000), S.g);
+    $("nameIn").value = rndName;
+    show("name");
+  }
+  $("nameOk").onclick = function () {
+    S.name = cleanName($("nameIn").value) || rndName;
+    save(); log("name → " + S.name); sync();
+    goHome();
+  };
+  $("nameIn").onkeydown = function (e) { if (e.key === "Enter") $("nameOk").click(); };
+  // ⚙️: the new name counts when the field is left (or Enter); an emptied field puts the old name back
+  $("setName").onchange = function () {
+    var v = cleanName($("setName").value);
+    if (v && v !== S.name) { S.name = v; save(); log("name → " + v); sync(); }
+    $("setName").value = S.name;
+  };
+  $("setName").onkeydown = function (e) { if (e.key === "Enter") $("setName").blur(); };
+  // ⚙️ boy / girl: a still-random name follows it („Uczennica14801" ↔ „Uczeń14801", same number); a typed name stays
+  Array.prototype.forEach.call(document.querySelectorAll("[data-kid]"), function (b) {
+    b.onclick = function () {
+      var m = /^(?:Uczeń|Uczennica)(\d{5})$/.exec(S.name || "");
+      if (m) { S.name = t("name_rnd", m[1], b.dataset.kid); $("setName").value = S.name; log("name → " + S.name); }
+      setKid(b.dataset.kid);
+    };
+  });
+
+  /* ---------- top 10 (server, as Ninja 10) ---------- */
+  // Two lists: „cw" = the practice records added up (the seven chapters + Kolejność + Pytania i nazwy, at most 5200 —
+  // the server's CAP.cw) · „egz" = the exam's record (25 cards, at most 2500 = MAX_PTS)
+  var PRACTICE = ["ch0", "ch1", "ch2", "ch3", "ch4", "ch5", "ch6", "kol", "pn"];
+  function practiceSum() {
+    return PRACTICE.reduce(function (s, m) { var b = S.best[m]; return s + (b && b.pts > 0 ? b.pts : 0); }, 0);
+  }
+  // Served by the Worker (`wrangler dev` on this computer) → the same origin; opened as a file (sim.html from the
+  // folder) or from GitHub Pages (static, no /api) → the online server (its CORS allows any origin)
+  var API = /^https?:$/.test(location.protocol) && !/\.github\.io$/.test(location.hostname)
+    ? "" : "https://przypadki-z-bobim.sallora.workers.dev";
+  // sync() sends „my name + the practice sum + the exam's record" — the whole state, so a send lost offline is simply
+  // repeated by the next one. Nothing new since the last accepted send → nothing is sent. Never throws: the app
+  // works offline
+  var syncing = null;
+  function payload() {
+    var best = {}, sum = practiceSum(), ex = S.best.egz;
+    if (sum > 0) best.cw = sum;
+    if (ex && ex.pts > 0) best.egz = ex.pts;
+    return JSON.stringify({ uid: S.uid, name: S.name, best: best });
+  }
+  function sync() {
+    if (syncing) return syncing.then(sync);
+    var body = payload();
+    if (!S.name || !S.g || body === S.sent) return Promise.resolve();
+    // text/plain: a „simple" request, no CORS preflight from a file:// page
+    syncing = fetch(API + "/api/sync", { method: "POST", headers: { "Content-Type": "text/plain" }, body: body })
+      .then(function (r) {
+        if (r.ok) { S.sent = body; save(); log("top 10: sent"); } else log("top 10: the server said " + r.status);
+      })
+      .catch(function () { log("top 10: offline — it goes with the next send"); })
+      .then(function () { syncing = null; });
+    return syncing;
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) { return "&#" + c.charCodeAt(0) + ";"; });
+  }
+  // a 🏆 on home: m = "cw" | "egz". The child's own fresh record is sent first
+  var topReq = 0;
+  function openTop(m) {
+    var req = ++topReq;
+    $("topTitle").textContent = t("top_title", t("m_" + m));
+    $("topList").innerHTML = ""; $("topMe").textContent = ""; $("topMsg").textContent = t("top_load");
+    show("top");
+    log("top 10: " + m);
+    sync()
+      .then(function () { return fetch(API + "/api/top?d=" + encodeURIComponent(m) + "&uid=" + S.uid, { cache: "no-store" }); })
+      .then(function (r) { if (!r.ok) throw new Error("status " + r.status); return r.json(); })
+      .then(function (j) { if (req === topReq && current === "top") renderTop(j); })
+      .catch(function (e) {
+        if (req === topReq && current === "top") $("topMsg").textContent = t("top_off");
+        log("top 10: no list (" + e.message + ")");
+      });
+  }
+  // j = {top: [{name, pts, me}], me: {place, pts} | null}; the child's own row is lit, and its own place + points ALWAYS
+  // stand under the list, wherever the place is. No record yet → „0 points". Nobody on the server → an empty list:
+  // nothing is ever made up to fill it
+  function renderTop(j) {
+    var rows = j.top || [], medal = ["🥇", "🥈", "🥉"];
+    $("topMsg").textContent = rows.length ? "" : t("top_empty");
+    $("topList").innerHTML = rows.map(function (r, i) {
+      return '<div class="flex items-center gap-3 rounded-2xl px-3 py-1.5 ' +
+        (r.me ? "bg-primary text-primary-content font-bold" : "bg-base-200") + '">' +
+        '<span class="w-9 text-center text-xl font-bold">' + (medal[i] || i + 1) + "</span>" +
+        '<span class="flex-1 truncate text-lg">' + esc(r.name) + "</span>" +
+        '<span class="text-lg font-bold">' + (+r.pts) + "</span></div>";
+    }).join("");
+    $("topMe").textContent = j.me ? t("top_me", j.me.place, j.me.pts) : t("top_me0");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-top]"), function (b) {
+    b.onclick = function () { openTop(b.dataset.top); };
+  });
 
   /* ---------- the table (p. 73) ---------- */
   $("tabS").innerHTML = sentHtml(-1);
-  // one row of p. 73 (also a chapter's row): badge + name, questions, helper words, examples
+  // a chapter's p. 73 row (a card): badge + name, questions, helper words, examples
   function rowHtml(i) {
     var c = CASES[i];
     return '<div class="flex items-center gap-3 bg-base-200 rounded-box p-3">' + badgeSvg(i, 42) +
@@ -868,42 +1136,65 @@
            '<p class="opacity-70 leading-tight">' + c.help + '</p><p class="text-sm opacity-60 mt-1">' + t("see_ex") + " " +
            c.ex + "</p></div></div>";
   }
-  $("tabL").innerHTML = CASES.map(function (c, i) { return rowHtml(i); }).join("");
+  // the table's row, two lines: badge · name · questions, then helper words · examples (names without colour — Lasha:
+  // „too much visual information", only the numbers keep it)
+  $("tabL").innerHTML = CASES.map(function (c, i) {
+    return '<div class="py-2 border-b border-base-content/10"><div class="flex items-center gap-3">' + badgeSvg(i, 26) +
+           '<span class="font-black">' + c.name + '</span><span class="ml-auto text-lg font-bold">' + c.q + "</span></div>" +
+           '<p class="text-sm opacity-55 leading-snug mt-0.5" style="padding-left:38px">' + c.help + " · " + c.ex + "</p></div>";
+  }).join("");
 
   /* ---------- drill ----------
      A card = { type, i }: „pyt" shows the name → pick the questions · „naz" shows the questions → pick the name ·
      „num" shows the name → pick its number · „ord" = one step of Kolejność: tap case i among the seven mixed-up names.
      The answers of pyt / naz / num stand in the cases' order. Pytania i nazwy mixes pyt + naz (5 of each); the exam
-     pyt + naz + num (5 of each), gives no help on a wrong answer and never shows the right one.
-     „spr" = { type, i: the chapter, k: its sentence }: the sentence with a gap, its three forms in a new order every
-     card; a button's data-i is the form's place in the sentence's row (1 = the right one). */
+     pyt + naz + num + spr (5 of each), gives no help on a wrong answer and never shows the right one — its mistakes
+     come on the result screen, each with the right answer and the case's „Zapamiętaj".
+     „spr" = { type, i: the chapter, k: its sentence, e: 1 = from the exam's own sentences }: the sentence with a gap,
+     its three forms in a new order every card; a button's data-i is the form's place in the sentence's row (1 = the
+     right one). */
   var mode = null, deck = [], card = null, cardI = 0, nFast = 0, nOk = 0, nPts = 0, cardT0 = 0, locked = true, padType = null;
   var miss = false;              // Kolejność: this step already had a wrong tap — it counts as wrong, the right one glows
+  var errs = [];                 // the exam's mistakes this round: { c: the card, pick: the child's answer }
   function shuffle(d) {
     for (var i = d.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = d[i]; d[i] = d[j]; d[j] = x; }
     return d;
   }
-  // n cards of one type: the seven in a random order, again and again, never the same case twice in a row
+  // n cards of one type: the seven in a random order, again and again, never the same case twice in a row.
+  // „spr" here = the exam's: one of that case's own exam sentences, at random — a case met twice (10 sentences over
+  // 7 cases) gets two different ones
   function dealOne(type, n) {
-    var out = [];
+    var out = [], left = {};
     while (out.length < n) {
       var s = shuffle([0, 1, 2, 3, 4, 5, 6]);
       if (out.length && s[0] === out[out.length - 1].i) s.push(s.shift());
-      s.forEach(function (i) { if (out.length < n) out.push({ type: type, i: i }); });
+      s.forEach(function (i) {
+        if (out.length >= n) return;
+        var c = { type: type, i: i };
+        if (type === "spr") {
+          if (!left[i] || !left[i].length) left[i] = shuffle(t("exam_spr")[i].map(function (x, k) { return k; }));
+          c.e = 1; c.k = left[i].pop();
+        }
+        out.push(c);
+      });
     }
     return out;
   }
-  // `each` cards of every type, mixed, never the same case twice in a row
-  function dealMix(types, each) {
+  // the exam's 25 cards: 5 each of name → questions, questions → name, name → number, and 10 of its own sentences
+  // (Lasha 2026-10-30: „the exam sentences 10, the rest as it is"; was 5 → 20 cards)
+  var EXAM_DECK = { pyt: 5, naz: 5, num: 5, spr: 10 };
+  // spec = type → how many cards, all mixed, never the same case twice in a row (1000 tries: 25 cards over 7 cases
+  // find such an order in ~1 of 40 shuffles)
+  function dealMix(spec) {
     var d = [];
-    types.forEach(function (ty) { d = d.concat(dealOne(ty, each)); });
-    for (var k = 0; k < 50; k++) {
+    Object.keys(spec).forEach(function (ty) { d = d.concat(dealOne(ty, spec[ty])); });
+    for (var k = 0; k < 1000; k++) {
       shuffle(d);
       if (d.every(function (c, j) { return !j || c.i !== d[j - 1].i; })) break;
     }
     return d;
   }
-  function sprOf(c) { return t("chapters")[c.i].spr[c.k]; }
+  function sprOf(c) { return c.e ? t("exam_spr")[c.i][c.k] : t("chapters")[c.i].spr[c.k]; }
   function cardText(c) {
     return c.type === "spr" ? sprOf(c)[0] : c.type === "naz" ? CASES[c.i].q : CASES[c.i].name;
   }
@@ -959,9 +1250,9 @@
     round++;
     var chI = chOf(mode);
     deck = chI >= 0 ? shuffle([0, 1, 2, 3, 4]).map(function (k) { return { type: "spr", i: chI, k: k }; })
-         : mode === "egz" ? dealMix(["pyt", "naz", "num"], 5) : mode === "pn" ? dealMix(["pyt", "naz"], 5)
+         : mode === "egz" ? dealMix(EXAM_DECK) : mode === "pn" ? dealMix({ pyt: 5, naz: 5 })
          : CASES.map(function (c, i) { return { type: "ord", i: i }; });
-    cardI = 0; nFast = 0; nOk = 0; nPts = 0; padType = null;
+    cardI = 0; nFast = 0; nOk = 0; nPts = 0; padType = null; errs = [];
     $("dS").innerHTML = sentHtml(chI);
     $("dS").style.display = mode === "egz" ? "none" : "";
     $("dQ").style.display = mode === "kol" ? "none" : "";
@@ -1019,7 +1310,9 @@
     } else if (mode === "egz") {
       sfx("bad");
       $("dQ").classList.add("xNo");
-      log(card.type + " " + q + " → " + pick + " ✗ (wanted " + c.name + ") · exam: no help");
+      errs.push({ c: card, pick: pick });
+      log(card.type + " " + q + " → " + pick + " ✗ (wanted " + (spr ? sprOf(card)[1] : pickText(card.type, card.i)) +
+          ") · exam: no help");
       var r2 = round;
       setTimeout(function () { if (r2 === round) nextCard(); }, 900);
     } else {
@@ -1119,6 +1412,7 @@
     b.master = b.master || master;
     var prev = b.pts, newRec = nPts > 0 && (prev === undefined || nPts > prev);
     if (newRec) b.pts = nPts;
+    b.n = deck.length;
     S.best[mode] = b; save();
     $("resEm").innerHTML = master ? danceHtml() : "💪";
     $("resTitle").textContent = master ? t("res_master") : t("res_more", need);
@@ -1127,11 +1421,33 @@
     $("resRec").textContent = prev === undefined ? "—" : prev;
     $("resRec").classList.toggle("rStrike", prev !== undefined);
     $("resNew").style.display = newRec ? "" : "none";
+    $("resErr").style.display = mode === "egz" ? "" : "none";
+    $("resErr").innerHTML = mode === "egz" ? errsHtml() : "";
+    $("resErr").scrollTop = 0;
     show("res");
     resCount(nPts, newRec, prev);
     if (master) sfx("yes");
     log("round done: " + nPts + " points" + (newRec ? " (record)" : "") + " · fast " + nFast + " · correct " + nOk +
         (master ? " · <b>MASTERED</b>" : ""));
+    if (newRec) sync();
+  }
+  // the exam's mistakes: the card with its right answer in the case's colour (a sentence: the form in its gap), the
+  // child's pick with ✕, the case's „Zapamiętaj" box as on the wrong sheet. No mistakes → one line
+  function errsHtml() {
+    if (!errs.length) return '<p class="text-xl font-black text-center">' + t("res_noerr") + "</p>";
+    return '<p class="text-sm font-extrabold opacity-70">' + t("res_err") + "</p>" + errs.map(function (e) {
+      var c = e.c, k = CASES[c.i], col = textCol(k.h), right, line;
+      if (c.type === "spr") {
+        right = sprOf(c)[1];
+        line = sprOf(c)[0].replace("_", '<span style="color:' + col + '">' + right + "</span>");
+      } else {
+        right = pickText(c.type, c.i);
+        line = cardText(c) + ' → <span style="color:' + col + '">' + right + "</span>";
+      }
+      return '<div class="bg-base-200 rounded-box px-4 py-2.5 border-l-[6px] shrink-0" style="border-color:' + hatCol(k.h) +
+             '"><p class="text-xl font-bold leading-tight">' + line + '</p><p class="opacity-70 mb-1"><b class="text-error">✕</b> ' +
+             e.pick + "</p>" + zapHtml(c.i) + "</div>";
+    }).join("");
   }
   // the score counts up from 0; when it passes the old record (a first record: when the count ends) #res gets .rBeat
   var RES_MS = 1400, RES_WAIT = 300, resTok = 0;
@@ -1168,7 +1484,10 @@
   /* ---------- settings: start over ---------- */
   $("resetGo").onclick = function () { $("resetAsk").showModal(); };
   $("resetNo").onclick = function () { $("resetAsk").close(); };
+  // Wipes the whole save and reloads: the app opens as on its very first launch (pick → name) with a new uid. The old
+  // uid's records stay on the server (as Ninja 10)
   $("resetYes").onclick = function () {
+    wiped = true;
     try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
     log("start over: save wiped");
     location.reload();
@@ -1179,7 +1498,11 @@
   applyTheme();
   applyLang();
   renderBest();
-  show("home");
+  drawKid();
+  if (!S.g) show("pick");
+  else if (!S.name) askName();
+  // one full send per launch: a record made offline last time goes now, and a row the server lost comes back
+  else { show("home"); S.sent = ""; sync(); }
 </script>
 </body>
 </html>
