@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
 <title>Przypadki z Bobim</title>
+<!-- installable on a phone: manifest + icons; sw.js keeps an offline copy -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#211d52">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Przypadki">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="stylesheet" href="lib/daisyui.css">
 <link rel="stylesheet" href="lib/daisyui-themes.css">
 <link rel="stylesheet" href="theme-milioni.css">
@@ -149,6 +157,11 @@
     border-width: 2px; border-radius: 18px; margin-bottom: 5px; transition: translate .07s, box-shadow .07s;
   }
   [data-theme=dojo] #app [data-top]:active { translate: 0 4px; --btn-shadow: 0 1px 0 rgb(0 0 0 / .35); }
+  /* ⚙️ „Pełny ekran": in full screen the page reaches under the phone's camera hole (viewport-fit=cover) — the
+     content keeps out of it. Elsewhere the insets are 0, and outside full screen nothing changes */
+  html:fullscreen body {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
 </style>
 </head>
 <body class="h-full m-0 bg-base-100 text-base-content">
@@ -341,6 +354,11 @@
         <span data-t="set_sound"></span>
         <input id="sndToggle" type="checkbox" class="toggle toggle-primary toggle-lg">
       </label>
+      <!-- full screen on / off, under the sound (Lasha 2026-11-01, mock „ბ"): the browser's own, no install needed -->
+      <label id="fsRow" class="flex items-center justify-between text-lg bg-base-200 rounded-box p-4">
+        <span data-t="set_full"></span>
+        <input id="fsToggle" type="checkbox" class="toggle toggle-primary toggle-lg">
+      </label>
       <div class="flex flex-col gap-2 bg-base-200 rounded-box p-4">
         <span class="text-sm opacity-70" data-t="set_theme"></span>
         <div id="themes" class="grid grid-cols-3 gap-2"></div>
@@ -430,6 +448,7 @@
       res_best: "Rekord",
       set_title: "Ustawienia",
       set_sound: "Dźwięki",
+      set_full: "Pełny ekran",
       set_theme: "Motyw",
       set_reset: "Zacznij od nowa",
       reset_ask: "Na pewno? Wszystkie wyniki znikną.",
@@ -721,6 +740,23 @@
   $("sndToggle").onchange = function () {
     S.sound = $("sndToggle").checked; save(); sfx("click"); log("sound → " + (S.sound ? "on" : "off"));
   };
+  // ⚙️ „Pełny ekran": the whole page full screen. Not saved — the toggle follows the real state (the back button, a
+  // reload or Esc leave it). Hidden where the browser can't (iPhone's Safari)
+  function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function drawFull() { $("fsToggle").checked = isFull(); }
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) $("fsRow").style.display = "none";
+  $("fsToggle").onchange = function () {
+    var d = document.documentElement, p;
+    sfx("click");
+    try {
+      p = isFull() ? (document.exitFullscreen || document.webkitExitFullscreen).call(document)
+                   : (d.requestFullscreen || d.webkitRequestFullscreen).call(d);
+    } catch (e) { p = Promise.reject(e); }
+    if (p && p.catch) p.catch(function (e) { log("full screen refused: " + e.message); drawFull(); });
+  };
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(function (ev) {
+    document.addEventListener(ev, function () { drawFull(); log("full screen → " + (isFull() ? "on" : "off")); });
+  });
 
   /* ---------- the case's badge: its number in a circle of its hue, an ink ring as the drawings (Lasha picked
      mock „ა", session 4: the gnomes went — in the book they had faces, here only colours) ----------
@@ -1503,6 +1539,8 @@
   else if (!S.name) askName();
   // one full send per launch: a record made offline last time goes now, and a row the server lost comes back
   else { show("home"); S.sent = ""; sync(); }
+  // the offline copy (sw.js) — only over http(s): sim.html opens the app as a file
+  if ("serviceWorker" in navigator && location.protocol !== "file:") navigator.serviceWorker.register("sw.js");
 </script>
 </body>
 </html>
