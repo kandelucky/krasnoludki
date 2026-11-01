@@ -34,6 +34,9 @@
   /* Screens: exactly one visible at a time */
   #app > section { display: none; }
   #app > section.on { display: flex; }
+  /* 🖨️ print screen (Ninja 10's): the real A4 sheet (794 × 1123 px = 210 × 297 mm) scaled into #prPv — page 1 shows, both print */
+  #prPv { position: relative; overflow: hidden; border-radius: 4px; background: #fff; box-shadow: 0 3px 14px rgba(0,0,0,.5); flex: none; }
+  #prPv iframe { position: absolute; left: 0; top: 0; width: 794px; height: 1123px; border: 0; transform-origin: 0 0; pointer-events: none; }
   /* Theme swatch (from Ninja 10): the inner .sw carries data-theme, so its dots are painted in that theme */
   .swb { border-radius: 14px; padding: 0; height: 34px; }
   .swb.cur { outline: 3px solid var(--color-primary); outline-offset: 2px; }
@@ -117,6 +120,8 @@
   .gap { display: inline-block; min-width: 118px; height: 1em; margin: 0 4px;
          border-bottom: 4px dashed color-mix(in oklab, var(--color-base-content) 50%, transparent); }
   .gap.ok { min-width: 0; height: auto; border-bottom: 4px solid currentColor; }
+  /* Jaki to przypadek?: the sentence's word, already right, underlined — no colour until the right tap */
+  #dQ u { text-decoration-thickness: 4px; text-underline-offset: 6px; }
 
   /* ---------- „dojo" (Ninja 10's kid theme): the starry sky behind every screen and the chunky pastel buttons, one hue
      per button (--h, set on the button). The theme's colours are in theme-milioni.css. Only this theme. ---------- */
@@ -176,7 +181,11 @@
       <!-- relative z-10: the picture block below is pulled up over this row (-mt-12) and caught every tap on 📋 / ⚙️ -->
       <div class="flex justify-between relative z-10">
         <button id="goTab" class="btn btn-ghost btn-circle text-2xl" data-ta="m_tab">📋</button>
-        <button id="toSet" class="btn btn-ghost btn-circle text-2xl">⚙️</button>
+        <!-- 🖨️ = the parent's Egzamin on paper, beside ⚙️ (Lasha 2026-11-01, mock „ბ"; 9 px clear of the picture) -->
+        <div class="flex">
+          <button id="toPrint" class="btn btn-ghost btn-circle text-2xl" data-ta="prn_title">🖨️</button>
+          <button id="toSet" class="btn btn-ghost btn-circle text-2xl">⚙️</button>
+        </div>
       </div>
       <!-- Sunny & Bobi, up between 📋 and ⚙️ (-mt-12) so home does not scroll. The title, the sea sentence and the
            chapters stand apart: a thin faint line under each of the two, 12 px on both sides (Lasha's pick „ბ" + a
@@ -368,6 +377,23 @@
       </div>
       <button class="btn btn-primary btn-lg btn-block mt-auto shrink-0 quit" data-t="btn_back"></button>
     </section>
+
+    <!-- 🖨️ the Egzamin on paper (Lasha 2026-11-01): Ninja 10's print screen — ← home · the A4 sheet as big as the room
+         allows · 🎲 new tasks · Drukuj. No options (one sheet, its answers always on page 2). The sheet is a whole
+         document written into #prSheet (sheetHtml) -->
+    <section id="print" class="h-full flex-col">
+      <header class="shrink-0 flex items-center gap-1 px-2 h-12">
+        <button class="btn btn-ghost btn-sm btn-circle text-lg quit">←</button>
+        <h1 class="text-base font-semibold">🖨️ <span data-t="prn_title"></span></h1>
+      </header>
+      <div id="prBox" class="flex-1 min-h-0 flex items-center justify-center px-3">
+        <div id="prPv"><iframe id="prSheet"></iframe></div>
+      </div>
+      <footer class="shrink-0 flex gap-2 px-3 pb-3 pt-1">
+        <button id="prAgain" class="btn btn-sm">🎲 <span data-t="prn_again"></span></button>
+        <button id="prGo" class="btn btn-sm btn-primary flex-1">🖨️ <span data-t="prn_go"></span></button>
+      </footer>
+    </section>
   </main>
 
   <!-- ⚙️ „start over": asked once before the whole save is wiped -->
@@ -422,6 +448,7 @@
       q_num: "Który to numer?",
       q_ord: "Ułóż od 1 do 7!",
       q_spr: "Wstaw brakujące słowo!",
+      q_jak: "Jaki to przypadek?",
       btn_check: "Sprawdź!",
       zap: "Zapamiętaj:",
       see_ex: "np.",
@@ -457,6 +484,29 @@
       exit_ask: "Zamknąć aplikację?",
       exit_yes: "Tak, zamknij",
       exit_no: "Nie",
+      // 🖨️ the parent's print screen (Ninja 10's words) and the sheet's own (sh_): the Egzamin on paper
+      prn_title: "Egzamin do druku",
+      prn_again: "Inne zadania",
+      prn_go: "Drukuj",
+      sh_exam: "Egzamin",
+      sh_name: "Imię:",
+      sh_date: "Data:",
+      sh_score: "Wynik:",
+      sh_jak: "1. Jaki to przypadek?",
+      sh_jak_do: "Zadaj pytanie do podkreślonego wyrazu i nazwij przypadek.",
+      sh_sent: "Zdanie",
+      sh_q: "Pytanie",
+      sh_case: "Przypadek",
+      sh_qs: "Pytania",
+      sh_odm: function (w) { return "2. Odmień wyraz „" + w + "” przez przypadki."; },
+      sh_odm_do: "Wpisz nazwę przypadku, pytania i formę wyrazu.",
+      sh_key: "Odpowiedzi",
+      sh_key_for: "dla rodzica · Egzamin z Przypadków",
+      sh_pass: function (all, pass) {
+        return "1 punkt za każdą kratkę: razem <b>" + all + "</b>. Zaliczone: <b>" + pass + " z " + all +
+               "</b> lub więcej (80 %, jak w aplikacji). Przy błędzie pokaż „Zapamiętaj”.";
+      },
+      sh_key_odm: function (w) { return "2. Odmiana: „" + w + "”"; },
       // the top 10 (Ninja 10's words; „who" = my draft)
       who: "Kim jesteś?",
       g_boy: "Chłopiec",
@@ -1184,11 +1234,13 @@
      A card = { type, i }: „pyt" shows the name → pick the questions · „naz" shows the questions → pick the name ·
      „num" shows the name → pick its number · „ord" = one step of Kolejność: tap case i among the seven mixed-up names.
      The answers of pyt / naz / num stand in the cases' order. Pytania i nazwy mixes pyt + naz (5 of each); the exam
-     pyt + naz + num + spr (5 of each), gives no help on a wrong answer and never shows the right one — its mistakes
+     pyt + naz + num (5 of each) + jak (10), gives no help on a wrong answer and never shows the right one — its mistakes
      come on the result screen, each with the right answer and the case's „Zapamiętaj".
      „spr" = { type, i: the chapter, k: its sentence, e: 1 = from the exam's own sentences }: the sentence with a gap,
      its three forms in a new order every card; a button's data-i is the form's place in the sentence's row (1 = the
-     right one). */
+     right one).
+     „jak" = { type, i, k, e: 1 }: an exam sentence with its word already in the right form, underlined, no colour →
+     pick the case's name (Lasha 2026-11-01: Sunny hears the right form by ear — naming its case shows she KNOWS it) */
   var mode = null, deck = [], card = null, cardI = 0, nFast = 0, nOk = 0, nPts = 0, cardT0 = 0, locked = true, padType = null;
   var miss = false;              // Kolejność: this step already had a wrong tap — it counts as wrong, the right one glows
   var errs = [];                 // the exam's mistakes this round: { c: the card, pick: the child's answer }
@@ -1197,8 +1249,8 @@
     return d;
   }
   // n cards of one type: the seven in a random order, again and again, never the same case twice in a row.
-  // „spr" here = the exam's: one of that case's own exam sentences, at random — a case met twice (10 sentences over
-  // 7 cases) gets two different ones
+  // „spr" / „jak" here = the exam's: one of that case's own exam sentences, at random — a case met twice (10 sentences
+  // over 7 cases) gets two different ones
   function dealOne(type, n) {
     var out = [], left = {};
     while (out.length < n) {
@@ -1207,7 +1259,7 @@
       s.forEach(function (i) {
         if (out.length >= n) return;
         var c = { type: type, i: i };
-        if (type === "spr") {
+        if (type === "spr" || type === "jak") {
           if (!left[i] || !left[i].length) left[i] = shuffle(t("exam_spr")[i].map(function (x, k) { return k; }));
           c.e = 1; c.k = left[i].pop();
         }
@@ -1217,8 +1269,9 @@
     return out;
   }
   // the exam's 25 cards: 5 each of name → questions, questions → name, name → number, and 10 of its own sentences
-  // (Lasha 2026-10-30: „the exam sentences 10, the rest as it is"; was 5 → 20 cards)
-  var EXAM_DECK = { pyt: 5, naz: 5, num: 5, spr: 10 };
+  // (Lasha 2026-10-30: „the exam sentences 10, the rest as it is"; was 5 → 20 cards). The sentences ask „Jaki to
+  // przypadek?" since 2026-11-01, no longer „pick the form" (spr: 10 → jak: 10 — still 25, the old records stay)
+  var EXAM_DECK = { pyt: 5, naz: 5, num: 5, jak: 10 };
   // spec = type → how many cards, all mixed, never the same case twice in a row (1000 tries: 25 cards over 7 cases
   // find such an order in ~1 of 40 shuffles)
   function dealMix(spec) {
@@ -1231,8 +1284,10 @@
     return d;
   }
   function sprOf(c) { return c.e ? t("exam_spr")[c.i][c.k] : t("chapters")[c.i].spr[c.k]; }
+  // „jak": the sentence with its right form already in, underlined (HTML)
   function cardText(c) {
-    return c.type === "spr" ? sprOf(c)[0] : c.type === "naz" ? CASES[c.i].q : CASES[c.i].name;
+    return c.type === "spr" ? sprOf(c)[0] : c.type === "jak" ? sprOf(c)[0].replace("_", "<u>" + sprOf(c)[1] + "</u>")
+         : c.type === "naz" ? CASES[c.i].q : CASES[c.i].name;
   }
   function pickText(type, i) {
     return type === "spr" ? sprOf(card)[i] : type === "pyt" ? CASES[i].q : type === "num" ? String(i + 1) : CASES[i].name;
@@ -1295,7 +1350,7 @@
     $("dO").style.display = mode === "kol" ? "flex" : "none";
     show("drill");
     nextCard();
-    log("drill " + mode + ": " + deck.map(function (c) { return c.type + ":" + CASES[c.i].ab + (c.type === "spr" ? c.k + 1 : ""); }).join(" · "));
+    log("drill " + mode + ": " + deck.map(function (c) { return c.type + ":" + CASES[c.i].ab + (c.k !== undefined ? c.k + 1 : ""); }).join(" · "));
   }
   function nextCard() {
     if (pz) { pz.next = true; return; }   // paused: the card (or the result) comes when the child goes on
@@ -1307,8 +1362,9 @@
     $("dPr").textContent = t("q_" + card.type);
     if (card.type === "ord") $("dO").innerHTML = slotsHtml();
     else if (card.type === "spr") $("dQ").innerHTML = cardText(card).replace("_", '<span class="gap"></span>');
+    else if (card.type === "jak") $("dQ").innerHTML = cardText(card);
     else $("dQ").textContent = cardText(card);
-    $("dQ").classList.toggle("sq", card.type === "spr");
+    $("dQ").classList.toggle("sq", card.type === "spr" || card.type === "jak");
     $("dQ").classList.remove("xNo");
     $("dFb").textContent = "";
     $("dWin").className = "win";
@@ -1338,11 +1394,13 @@
         var g = $("dQ").querySelector(".gap");
         g.className = "gap ok pop"; g.textContent = pick; g.style.color = textCol(c.h);
       }
+      // Jaki to przypadek?: the underlined word takes its case's colour, the same moment longer
+      if (card.type === "jak") $("dQ").querySelector("u").style.color = textCol(c.h);
       $("dFb").innerHTML = t(fast ? "fb_fast" : "fb_ok") + ' <b class="pop text-warning">+' + pts + "</b>";
       $("dScore").textContent = nPts;
       log(card.type + " " + q + " → " + pick + " ✓ " + (ms / 1000).toFixed(3) + "s +" + pts + (fast ? " ⚡" : " (slow)"));
       var r = round;
-      setTimeout(function () { if (r === round) nextCard(); }, spr ? 1100 : 700);
+      setTimeout(function () { if (r === round) nextCard(); }, spr || card.type === "jak" ? 1100 : 700);
     } else if (mode === "egz") {
       sfx("bad");
       $("dQ").classList.add("xNo");
@@ -1516,6 +1574,82 @@
     }
   }
   $("resAgain").onclick = function () { drillStart(); };
+
+  /* ---------- 🖨️ the Egzamin on paper (Lasha 2026-11-01: v2 of the sheet + home mock „ბ"). Page 1 = the child's:
+     ① 10 exam sentences, the word already right and underlined → write its question + case (Sunny hears the right
+     form by ear — naming the case shows she KNOWS it) · ② one word (tata / mama / lalka) through the seven cases.
+     Page 2 = the answers, each with its case's „Zapamiętaj". 1 point a box. Every open and 🎲 deals a new sheet.
+     Print rule: only borders and text — browsers drop CSS backgrounds when printing ---------- */
+  var SH_WORDS = { tata: 0, mama: 1, lalka: 3 };   // exam_spr's column: the same word in every case's row
+  var SH_N = 10, SH_POINTS = SH_N * 2 + 7 * 3, SH_PASS = Math.ceil(SH_POINTS * .8);   // 20 + 21 = 41, pass 33
+  var SHEET_CSS = [
+    "@page { size: A4; margin: 12mm 13mm; }",
+    "* { box-sizing: border-box; }",
+    'body { margin: 0; background: #fff; color: #1d1b2e; font: 13pt/1.35 "Segoe UI", Arial, sans-serif; }',
+    ".page { width: 210mm; min-height: 297mm; padding: 12mm 13mm; }",
+    ".head { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #1d1b2e; padding-bottom: 6px; }",
+    "h1 { font-size: 21pt; margin: 0; } h1 small { display: block; font-size: 11pt; font-weight: 400; opacity: .7; }",
+    ".who { display: flex; gap: 8mm; margin: 4mm 0 2mm; font-size: 12pt; }",
+    ".who span { flex: 1; border-bottom: 1.5px dotted #1d1b2e; padding-bottom: 1mm; } .who span.w { flex: 0 0 34mm; }",
+    "h2 { font-size: 13.5pt; margin: 6mm 0 1.5mm; } h2 small { display: block; font-weight: 400; opacity: .7; font-size: 11pt; }",
+    "table { width: 100%; border-collapse: collapse; }",
+    "th { font-size: 10pt; font-weight: 600; text-align: left; opacity: .65; padding: 1mm 1.5mm; border-bottom: 1.5px solid #1d1b2e; }",
+    "td { padding: 0 1.5mm; height: 10.5mm; border-bottom: 1px solid #ccc; }",
+    "td.n { width: 8mm; font-weight: 700; opacity: .6; text-align: right; } td.f { border-left: 1px dashed #ccc; }",
+    "u { text-decoration-thickness: 2px; text-underline-offset: 3px; font-weight: 700; }",
+    ".key td { height: auto; padding: 1.2mm 1.5mm; font-size: 10.5pt; vertical-align: top; }",
+    ".key td.z { opacity: .8; font-style: italic; } .key b { white-space: nowrap; }",
+    ".pass { margin: 3mm 0; font-size: 11.5pt; }",
+    "@media print { .page { padding: 0; width: auto; min-height: 0; } .page + .page { break-before: page; } }"
+  ].join("\n");
+  function sheetHtml() {
+    var words = Object.keys(SH_WORDS), word = words[Math.floor(Math.random() * words.length)],
+        forms = t("exam_spr").map(function (row) { return row[SH_WORDS[word]][1].toLowerCase(); }),
+        sents = dealOne("jak", SH_N);   // a case met twice gets two different sentences
+    function zap(i) { return t("zap") + " " + t("chapters")[i].zap.join(" "); }
+    function row(k, cells) { return '<tr><td class="n">' + (k + 1) + ".</td>" + cells + "</tr>"; }
+    log("print: " + sents.map(function (c) { return CASES[c.i].ab + (c.k + 1); }).join(" · ") + " · odmiana: " + word);
+    return '<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><title>' + t("title") + " — " + t("sh_exam") +
+      "</title><style>" + SHEET_CSS + "</style></head><body>" +
+      '<div class="page"><div class="head"><h1>' + t("title") + "<small>" + t("sh_exam") + "</small></h1>" + heroesSvg() + "</div>" +
+      '<div class="who"><span>' + t("sh_name") + "</span><span>" + t("sh_date") + '</span><span class="w">' + t("sh_score") +
+      " &nbsp; &nbsp; / " + SH_POINTS + "</span></div>" +
+      "<h2>" + t("sh_jak") + "<small>" + t("sh_jak_do") + "</small></h2>" +
+      "<table><tr><th></th><th>" + t("sh_sent") + '</th><th style="width:40mm">' + t("sh_q") + '</th><th style="width:46mm">' +
+      t("sh_case") + "</th></tr>" + sents.map(function (c, k) {
+        return row(k, "<td>" + cardText(c) + '</td><td class="f"></td><td class="f"></td>');
+      }).join("") + "</table>" +
+      "<h2>" + t("sh_odm", word) + "<small>" + t("sh_odm_do") + "</small></h2>" +
+      "<table><tr><th></th><th>" + t("sh_case") + '</th><th style="width:52mm">' + t("sh_qs") + '</th><th style="width:46mm">' +
+      word + "</th></tr>" + CASES.map(function (c, k) {
+        return row(k, '<td></td><td class="f"></td><td class="f"></td>');
+      }).join("") + "</table></div>" +
+      '<div class="page"><div class="head"><h1>' + t("sh_key") + "<small>" + t("sh_key_for") + "</small></h1></div>" +
+      '<p class="pass">' + t("sh_pass", SH_POINTS, SH_PASS) + "</p>" +
+      "<h2>" + t("sh_jak") + '</h2><table class="key">' + sents.map(function (c, k) {
+        return row(k, "<td>" + cardText(c) + "</td><td><b>" + CASES[c.i].q + "</b></td><td><b>" + CASES[c.i].name +
+                      '</b></td><td class="z">' + zap(c.i) + "</td>");
+      }).join("") + "</table>" +
+      "<h2>" + t("sh_key_odm", word) + '</h2><table class="key">' + CASES.map(function (c, k) {
+        return row(k, "<td><b>" + c.name + "</b></td><td>" + c.q + "</td><td><b>" + forms[k] + (k === 6 ? "!" : "") +
+                      '</b></td><td class="z">' + zap(k) + "</td>");
+      }).join("") + "</table></div></body></html>";
+  }
+  function writeSheet() {
+    var doc = $("prSheet").contentWindow.document;
+    doc.open(); doc.write(sheetHtml()); doc.close();
+  }
+  // the sheet takes whatever room is left: as wide as the screen, or as tall as the space, whichever runs out first
+  function fitPreview() {
+    var box = $("prBox"), pv = $("prPv"),
+        w = Math.max(60, Math.floor(Math.min(box.clientWidth - 24, (box.clientHeight - 12) * 210 / 297)));
+    pv.style.width = w + "px"; pv.style.height = Math.round(w * 297 / 210) + "px";
+    $("prSheet").style.transform = "scale(" + (w / 794) + ")";
+  }
+  new ResizeObserver(fitPreview).observe($("prBox"));
+  $("toPrint").onclick = function () { show("print"); writeSheet(); fitPreview(); log("print: open"); };
+  $("prAgain").onclick = function () { writeSheet(); log("print: new tasks"); };
+  $("prGo").onclick = function () { log("print: → printer"); $("prSheet").contentWindow.print(); };
 
   /* ---------- settings: start over ---------- */
   $("resetGo").onclick = function () { $("resetAsk").showModal(); };
